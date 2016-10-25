@@ -22,6 +22,6 @@ struct table *table_set_list(struct table *table, struct list* servers);
 struct table *table_add_item(struct table *table, int from, int to, int cost);
 struct table *table_update_cost(struct table *table, int from, int to, int cost);
 void table_free(struct table *table);
-char *table_str(struct table *table, char *dst);
+char *table_str(struct table *table);
 
 #endif

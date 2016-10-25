@@ -41,6 +41,7 @@ table_set_list(struct table *table, struct list *list)
     assert(table);
     assert(list);
 
+    list_free(table->servers);
     table->servers = list;
     return table;
 }
@@ -89,11 +90,13 @@ table_free(struct table *table)
 }
 
 char *
-table_str(struct table *table, char *dst)
+table_str(struct table *table)
 {
-    assert(dst);
     assert(table);
 
+    static char repr[MAXLEN_TABLE_STR]; /* return value */
+
+    int mts = MAXLEN_TABLE_STR;
     int cost;
     char newline[2] = "\n";
     char tmp[MAXLEN_TABLE_STR];
@@ -101,49 +104,48 @@ table_str(struct table *table, char *dst)
     struct dvec_entry *dv_entry;
     struct list *list_ptr;
 
-    memset(dst, 0, MAXLEN_TABLE_STR);
+    memset(repr, 0, mts);
 
-    strncat(dst, "X", MAXLEN_TABLE_STR);
+    strncat(repr, "X", mts);
     for (int i = 1; i <= table->n; i++) {
-        snprintf(tmp, MAXLEN_TABLE_STR, "%4d", i);
-        strncat(dst, tmp, MAXLEN_TABLE_STR);
+        snprintf(tmp, mts, "%4d", i);
+        strncat(repr, tmp, mts);
     }
-    strncat(dst, newline, MAXLEN_TABLE_STR);
+    strncat(repr, newline, mts);
 
     for (int i = 1; i <= table->n; i++) {
         list_ptr = table->costs[i]->list;
 
-        snprintf(tmp, MAXLEN_TABLE_STR, "%d", i);
-        strncat(dst, tmp, MAXLEN_TABLE_STR);
+        snprintf(tmp, mts, "%d", i);
+        strncat(repr, tmp, mts);
 
         while (list_ptr) {
             dv_entry = list_ptr->item;
             cost = dv_entry->cost;
 
-            if (cost == INF)
-                snprintf(tmp, MAXLEN_TABLE_STR, " inf");
+            if (cost >= INF)
+                snprintf(tmp, mts, " inf");
             else
-                snprintf(tmp, MAXLEN_TABLE_STR, "%4d", cost);
+                snprintf(tmp, mts, "%4d", cost);
 
-            strncat(dst, tmp, MAXLEN_TABLE_STR);
+            strncat(repr, tmp, mts);
             list_ptr = list_ptr->next;
         }
 
-        strncat(dst, newline, MAXLEN_TABLE_STR);;
+        strncat(repr, newline, mts);;
     }
 
-    return dst;
+    return repr;
 }
 
 int
 main(void)
 {
-    char str[MAXLEN_TABLE_STR];
     struct table *table = table_init(1, 6, 3);
 
-    table_update_cost(table, 1, 3, 200);
+    table_update_cost(table, 1, 3, 20);
 
-    printf("%s", table_str(table, str));
+    printf("%s", table_str(table));
 
     table_free(table);
     return 0;
