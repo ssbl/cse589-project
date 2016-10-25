@@ -7,6 +7,9 @@ dvec: dvec.c
 table: table.c dvec.o list.o
 	$(CC) $(CFLAGS) $^ -o $@
 
+serventry: serventry.c
+	$(CC) $(CFLAGS) $< -o $@
+
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c
 
