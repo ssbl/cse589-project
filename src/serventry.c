@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <netinet/in.h>
 
 #include "serventry.h"
 
@@ -19,6 +20,7 @@ serventry_new(int servid, char *addr, char *port)
     assert(addr);
 
     s_entry->servid = servid;
+    s_entry->neighbor = 0;
     s_entry->port = strdup(port);
     s_entry->addr = strdup(addr);
 

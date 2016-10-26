@@ -4,13 +4,12 @@
 #ifndef SERVENTRY_H_
 #define SERVENTRY_H_
 
-#include <netinet/in.h>
-
 #define PORTLEN 8
 
 
 struct serventry {
     int servid;
+    int neighbor;
     char *port;
     char *addr;
 };
