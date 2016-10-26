@@ -44,6 +44,7 @@ struct dvec *
 dvec_add(struct dvec *dvec, struct dvec_entry *dv_entry)
 {
     assert(dvec);
+    assert(dvec->list);
     assert(dv_entry);
 
     if (list_add(dvec->list, dv_entry) == NULL)
@@ -56,12 +57,14 @@ struct dvec *
 dvec_update(struct dvec *dvec, int to, int cost)
 {
     assert(dvec);
+    assert(dvec->list);
     assert(cost > 0 && cost <= INF&& to > 0);
 
     struct list *ptr = dvec->list;
     struct dvec_entry *dv_entry;
 
     while (ptr) {
+        assert(ptr->item);
         dv_entry = ptr->item;
         if (!dv_entry)
             return NULL;
@@ -73,6 +76,28 @@ dvec_update(struct dvec *dvec, int to, int cost)
     }
 
     return NULL;
+}
+
+int
+dvec_lookup(struct dvec *dvec, int to)
+{
+    assert(dvec);
+    assert(dvec->list);
+
+    struct dvec_entry *dv_entry;
+    struct list *ptr = dvec->list;
+
+    while (ptr) {
+        assert(ptr->item);
+        dv_entry = ptr->item;
+
+        if (dv_entry->to == to)
+            return dv_entry->cost;
+
+        ptr = ptr->next;
+    }
+
+    return E_LOOKUP_FAILED;
 }
 
 char *
