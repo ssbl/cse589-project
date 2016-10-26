@@ -9,7 +9,7 @@
 
 
 struct table *
-table_init(int id, int n, int neighbors)
+table_init(int n, int neighbors)
 {
     struct table *table;
 
@@ -17,11 +17,9 @@ table_init(int id, int n, int neighbors)
         return NULL;
 
     assert(n > 0);              /* decide a limit? */
-    assert(id > 0 && id <= n);
     assert(neighbors > 0 && neighbors <= n);
     assert(neighbors <= MAX_NEIGHBORS);
 
-    table->id = id;
     table->n = n;
     table->neighbors = neighbors;
     table->servers = list_init();
@@ -136,17 +134,4 @@ table_str(struct table *table)
     }
 
     return repr;
-}
-
-int
-main(void)
-{
-    struct table *table = table_init(1, 6, 3);
-
-    table_update_cost(table, 1, 3, 20);
-
-    printf("%s", table_str(table));
-
-    table_free(table);
-    return 0;
 }

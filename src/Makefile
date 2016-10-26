@@ -4,8 +4,8 @@ CFLAGS = -Wall -std=gnu99 -pedantic
 dvec: dvec.c
 	$(CC) $(CFLAGS) $^ -c
 
-table: table.c dvec.o list.o
-	$(CC) $(CFLAGS) $^ -o $@
+table: table.c
+	$(CC) $(CFLAGS) $^ -c
 
 serventry: serventry.c
 	$(CC) $(CFLAGS) $< -o $@
