@@ -17,7 +17,7 @@ struct table {
 };
 
 
-struct table *table_init(int id, int n, int neighbors);
+struct table *table_init(int n, int neighbors);
 struct table *table_set_list(struct table *table, struct list* servers);
 struct table *table_add_item(struct table *table, int from, int to, int cost);
 struct table *table_update_cost(struct table *table, int from, int to, int cost);
