@@ -60,6 +60,27 @@ table_add_item(struct table *table, int from, int to, int cost)
     return table;
 }
 
+int
+table_get_cost(struct table *table, int from, int to)
+{
+    assert(table);
+    assert(table->costs);
+    assert(to > 0 && to <= MAXN);
+    assert(from > 0 && from <= MAXN);
+
+    return dvec_lookup(table->costs[from], to);
+}
+
+struct dvec *
+table_get_dvec(struct table *table, int from)
+{
+    assert(table);
+    assert(table->costs);
+    assert(from > 0 && from <= MAXN);
+
+    return table->costs[from];
+}
+
 struct table *
 table_update_cost(struct table *table, int from, int to, int cost)
 {
