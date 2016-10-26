@@ -12,6 +12,7 @@ list_init()
         return NULL;
 
     list->item = NULL;
+    list->free = NULL;
     list->next = NULL;
 
     return list;
@@ -50,7 +51,10 @@ list_free(struct list *list)
         rmptr = ptr;
         ptr = ptr->next;
 
-        free(rmptr->item);
+        if (rmptr->free)
+            rmptr->free(rmptr->item);
+        else
+            free(rmptr->item);
         free(rmptr);
     }
 }

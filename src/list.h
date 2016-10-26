@@ -6,6 +6,7 @@
 
 struct list {
     void *item;
+    void (*free)(void *ptr);
     struct list *next;
 };
 
