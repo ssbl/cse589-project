@@ -27,7 +27,7 @@ struct dvec {
 struct dvec_entry *dvec_entry_new(int to, int cost);
 struct dvec *dvec_init(int from);
 struct dvec *dvec_add(struct dvec *dvec, struct dvec_entry *dv_entry);
-struct dvec *dvec_update(struct dvec *dvec, int to, int cost);
+struct dvec *dvec_update_cost(struct dvec *dvec, int to, int cost);
 int dvec_lookup(struct dvec *dvec, int to);
 char *dvec_entry_str(struct dvec_entry *dv_entry, char *dst);
 char *dvec_str(struct dvec *dvec, char *dst);

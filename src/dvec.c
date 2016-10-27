@@ -10,7 +10,7 @@
 struct dvec_entry *
 dvec_entry_new(int to, int cost)
 {
-    assert(to > 0 && cost > 0);
+    assert(to > 0 && cost >= 0);
 
     struct dvec_entry *dv_entry;
 
@@ -54,11 +54,11 @@ dvec_add(struct dvec *dvec, struct dvec_entry *dv_entry)
 }
 
 struct dvec *
-dvec_update(struct dvec *dvec, int to, int cost)
+dvec_update_cost(struct dvec *dvec, int to, int cost)
 {
     assert(dvec);
     assert(dvec->list);
-    assert(cost > 0);
+    assert(cost >= 0);
     assert(to > 0);
 
     struct listitem *ptr = dvec->list->head;
@@ -115,7 +115,7 @@ dvec_entry_str(struct dvec_entry *dv_entry, char *dst)
     int to = dv_entry->to;
     int cost = dv_entry->cost;
 
-    assert(to > 0 && cost > 0 && cost <= INF);
+    assert(to > 0 && cost >= 0 && cost <= INF);
 
     if (cost >= INF)
         strcpy(cost_str, "inf");
