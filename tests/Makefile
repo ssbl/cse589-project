@@ -12,4 +12,7 @@ dvec: dvectest.c dvec.o list.o
 table: tabletest.c table.o dvec.o list.o
 	$(CC) $(CFLAGS) $^ -o tabletest
 
-.PHONY: dvec table
+serventry: serventrytest.c serventry.o
+	$(CC) $(CFLAGS) $^ -o serventrytest
+
+.PHONY: dvec table serventry
