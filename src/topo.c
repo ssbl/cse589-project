@@ -41,6 +41,53 @@ parse_entry_to_list(char *line, FILE *fp, struct list *list)
     return list;
 }
 
+static struct dvec *
+parse_neighbor_entry(char *line, FILE *fp, struct table *table)
+{
+    assert(table);
+    int servid, neighbor, cost;
+    struct dvec *dv;
+    struct listitem *ptr;
+    struct serventry *s_entry;
+
+    line = fgets(line, MAXLEN_LINE, fp);
+    if (!line)
+        return NULL;
+
+    if (sscanf(line, "%d%d%d", &servid, &neighbor, &cost) != 3)
+        return NULL;
+
+    assert(cost > 0);
+    assert(servid > 0 && servid <= table->n);
+    assert(neighbor > 0 && neighbor <= table->n);
+    assert(neighbor != servid);
+
+    ptr = table->servers->head;
+    while (ptr) {
+        s_entry = ptr->value;
+        if (s_entry->servid == neighbor) {
+            s_entry->neighbor = 1;
+            break;
+        }
+        ptr = ptr->next;
+    }
+
+    dv = table->costs[servid];
+    dv->from = servid;
+    dvec_update_cost(dv, neighbor, cost);
+
+    return dv;
+}
+
+/*
+ * Reads the topology file named `filename` from the current working directory
+ * and creates a new routing table.
+ * Performs minimal semantic checking.
+ *
+ * This function fails if the file is not in the right format.
+ * Returns NULL on failure.
+ */
+
 struct table *
 parse_topofile(char *filename)
 {
@@ -70,10 +117,21 @@ parse_topofile(char *filename)
 
     servers = list_init();
     servers->free = serventry_free;
-    for (int i = 1; i <= n; i++)
-        if (!parse_entry_to_list(line, fp, servers))
+    for (int i = 1; i <= n; i++) {
+        if (!parse_entry_to_list(line, fp, servers)) {
+            table_free(table);
             return NULL;
+        }
+    }
 
+    for (int i = 1; i <= neighbors; i++) {
+        if (!parse_neighbor_entry(line, fp, table)) {
+            table_free(table);
+            return NULL;
+        }
+    }
+
+    fclose(fp);
     table_set_list(table, servers);
     return table;
 }
@@ -85,8 +143,9 @@ main(void)
 
     if (table) {
         printf("%d %d\n", table->n, table->neighbors);
-        for (struct list *ptr = table->servers; ptr; ptr = ptr->next)
-            printf("%s", serventry_str(ptr->item));
+        for (struct listitem *ptr = table->servers->head; ptr; ptr = ptr->next)
+            printf("%s", serventry_str(ptr->value));
+        printf("%s", table_str(table));
         table_free(table);
     } else
         puts("parse error");

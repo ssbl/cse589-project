@@ -6,4 +6,7 @@
 
 #define MAXLEN_LINE 80
 
+
+struct table *parse_topofile(char *filename);
+
 #endif
