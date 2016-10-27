@@ -1,19 +1,33 @@
 #include <assert.h>
 #include <stdlib.h>
+
 #include "list.h"
 
 
+struct listitem *
+listitem_new(void *value)
+{
+    struct listitem *new;
+
+    if ((new = malloc(sizeof(*new))) == NULL)
+        return NULL;
+
+    new->value = value;
+    new->next = NULL;
+
+    return new;
+}
+
 struct list *
-list_init()
+list_init(void)
 {
     struct list *list;
 
     if ((list = malloc(sizeof(*list))) == NULL)
         return NULL;
 
-    list->item = NULL;
+    list->head = NULL;
     list->free = NULL;
-    list->next = NULL;
 
     return list;
 }
@@ -24,15 +38,16 @@ list_add(struct list *list, void *item)
     assert(list);
     assert(item);
 
-    struct list *ptr = list;
+    struct listitem *ptr = list->head;
+
+    if (!list->head) {
+        list->head = listitem_new(item);
+        return list;
+    }
 
     while (ptr) {
-        if (!ptr->item) {
-            ptr->item = item;
-            return list;
-        } else if (!ptr->next) {
-            ptr->next = list_init();
-            ptr->next->item = item;
+        if (!ptr->next) {
+            ptr->next = listitem_new(item);
             return list;
         }
         ptr = ptr->next;
@@ -44,17 +59,19 @@ list_add(struct list *list, void *item)
 void
 list_free(struct list *list)
 {
-    struct list *rmptr;
-    struct list *ptr = list;
+    struct listitem *rmptr;
+    struct listitem *ptr = list->head;
 
     while (ptr) {
         rmptr = ptr;
         ptr = ptr->next;
 
-        if (rmptr->free)
-            rmptr->free(rmptr->item);
+        if (list->free)
+            list->free(rmptr->value);
         else
-            free(rmptr->item);
+            free(rmptr->value);
         free(rmptr);
     }
+
+    free(list);
 }

@@ -58,14 +58,18 @@ dvec_update(struct dvec *dvec, int to, int cost)
 {
     assert(dvec);
     assert(dvec->list);
-    assert(cost > 0 && cost <= INF&& to > 0);
+    assert(cost > 0);
+    assert(to > 0);
 
-    struct list *ptr = dvec->list;
+    struct listitem *ptr = dvec->list->head;
     struct dvec_entry *dv_entry;
 
+    if (cost >= INF)
+        cost = INF;
+
     while (ptr) {
-        assert(ptr->item);
-        dv_entry = ptr->item;
+        assert(ptr->value);
+        dv_entry = ptr->value;
         if (!dv_entry)
             return NULL;
         if (dv_entry->to == to) {
@@ -85,11 +89,11 @@ dvec_lookup(struct dvec *dvec, int to)
     assert(dvec->list);
 
     struct dvec_entry *dv_entry;
-    struct list *ptr = dvec->list;
+    struct listitem *ptr = dvec->list->head;
 
     while (ptr) {
-        assert(ptr->item);
-        dv_entry = ptr->item;
+        assert(ptr->value);
+        dv_entry = ptr->value;
 
         if (dv_entry->to == to)
             return dv_entry->cost;
@@ -113,7 +117,7 @@ dvec_entry_str(struct dvec_entry *dv_entry, char *dst)
 
     assert(to > 0 && cost > 0 && cost <= INF);
 
-    if (cost == INF)
+    if (cost >= INF)
         strcpy(cost_str, "inf");
     else
         sprintf(cost_str, "%3d", cost);
@@ -132,11 +136,11 @@ dvec_str(struct dvec *dvec, char *dst)
     char dv_entry_str[MAXLEN_DVEC_ENTRY_STR];
 
     int from = dvec->from;
-    struct list *ptr = dvec->list;
+    struct listitem *ptr = dvec->list->head;
 
     sprintf(dst, "from %2d:\n", from);
     while (ptr) {
-        dvec_entry_str(ptr->item, dv_entry_str);
+        dvec_entry_str(ptr->value, dv_entry_str);
         strcat(dst, dv_entry_str);
         ptr = ptr->next;
     }

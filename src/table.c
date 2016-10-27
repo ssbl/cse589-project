@@ -121,7 +121,7 @@ table_str(struct table *table)
     char tmp[MAXLEN_TABLE_STR];
 
     struct dvec_entry *dv_entry;
-    struct list *list_ptr;
+    struct listitem *list_ptr;
 
     memset(repr, 0, mts);
 
@@ -133,13 +133,13 @@ table_str(struct table *table)
     strncat(repr, newline, mts);
 
     for (int i = 1; i <= table->n; i++) {
-        list_ptr = table->costs[i]->list;
+        list_ptr = table->costs[i]->list->head;
 
         snprintf(tmp, mts, "%d", i);
         strncat(repr, tmp, mts);
 
         while (list_ptr) {
-            dv_entry = list_ptr->item;
+            dv_entry = list_ptr->value;
             cost = dv_entry->cost;
 
             if (cost >= INF)
