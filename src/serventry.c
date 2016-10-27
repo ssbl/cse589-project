@@ -38,7 +38,7 @@ serventry_str(struct serventry *s_entry)
     char *addr = s_entry->addr;
     char *port = s_entry->port;
 
-    snprintf(repr, total_len, "%2d %16s %5s\n", servid, addr, port);
+    snprintf(repr, total_len, "%02d %16s %5s\n", servid, addr, port);
 
     return repr;
 }
