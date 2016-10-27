@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/in.h>
 
 #include "serventry.h"
 
@@ -32,8 +31,8 @@ serventry_str(struct serventry *s_entry)
 {
     assert(s_entry);
 
-    size_t total_len = INET6_ADDRSTRLEN + PORTLEN + 2;
-    static char repr[INET6_ADDRSTRLEN];
+    size_t total_len = ADDRLEN + PORTLEN + 2;
+    static char repr[ADDRLEN];
 
     int servid = s_entry->servid;
     char *addr = s_entry->addr;
@@ -45,24 +44,13 @@ serventry_str(struct serventry *s_entry)
 }
 
 void
-serventry_free(struct serventry *s_entry)
+serventry_free(void *s_entry)   /* void * since it is used by list_free */
 {
     assert(s_entry);
 
-    free(s_entry->addr);
-    free(s_entry->port);
-    free(s_entry);
-}
+    struct serventry *ptr = s_entry;
 
-int
-main(void)
-{
-    char port[PORTLEN] = "3453";
-    char addr[INET6_ADDRSTRLEN] = "192.168.1.2";
-    struct serventry *s_entry = serventry_new(1, addr, port);
-
-    printf("%s", serventry_str(s_entry));
-
-    serventry_free(s_entry);
-    return 0;
+    free(ptr->port);
+    free(ptr->addr);
+    free(ptr);
 }
