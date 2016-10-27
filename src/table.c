@@ -26,8 +26,12 @@ table_init(int n, int neighbors)
 
     for (int i = 1; i <= n; i++) {
         table->costs[i] = dvec_init(i);
-        for (int j = 1; j <= n; j++)
-            dvec_add(table->costs[i], dvec_entry_new(j, INF));
+        for (int j = 1; j <= n; j++) {
+            if (i == j)
+                dvec_add(table->costs[i], dvec_entry_new(j, 0));
+            else
+                dvec_add(table->costs[i], dvec_entry_new(j, INF));
+        }
     }
 
     return table;
@@ -90,7 +94,7 @@ table_update_cost(struct table *table, int from, int to, int cost)
 
     struct dvec *dv = table->costs[from];
 
-    if (dvec_update(dv, to, cost) == NULL)
+    if (dvec_update_cost(dv, to, cost) == NULL)
         return NULL;
 
     return table;
