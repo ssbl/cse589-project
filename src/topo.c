@@ -135,20 +135,3 @@ parse_topofile(char *filename)
     table_set_list(table, servers);
     return table;
 }
-
-int
-main(void)
-{
-    struct table *table = parse_topofile("topofile");
-
-    if (table) {
-        printf("%d %d\n", table->n, table->neighbors);
-        for (struct listitem *ptr = table->servers->head; ptr; ptr = ptr->next)
-            printf("%s", serventry_str(ptr->value));
-        printf("%s", table_str(table));
-        table_free(table);
-    } else
-        puts("parse error");
-
-    return 0;
-}

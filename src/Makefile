@@ -13,8 +13,8 @@ table: table.c
 serventry: serventry.c
 	$(CC) $(CFLAGS) $^ -c
 
-topo: topo.c serventry.o table.o dvec.o list.o
-	$(CC) $(CFLAGS) $^ -o $@
+topo: topo.c
+	$(CC) $(CFLAGS) $^ -c
 
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c

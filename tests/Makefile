@@ -15,4 +15,7 @@ table: tabletest.c table.o dvec.o list.o
 serventry: serventrytest.c serventry.o
 	$(CC) $(CFLAGS) $^ -o serventrytest
 
-.PHONY: dvec table serventry
+topo: topotest.c topo.o list.o dvec.o serventry.o table.o
+	$(CC) $(CFLAGS) $^ -o topotest
+
+.PHONY: dvec table serventry topo
