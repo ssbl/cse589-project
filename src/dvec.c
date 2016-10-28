@@ -18,6 +18,7 @@ dvec_entry_new(int to, int cost)
         return NULL;
 
     dv_entry->to = to;
+    dv_entry->via = to;
     dv_entry->cost = cost;
 
     return dv_entry;

@@ -14,6 +14,7 @@
 
 struct dvec_entry {
     int to;
+    int via;
     int cost;
 };
 
