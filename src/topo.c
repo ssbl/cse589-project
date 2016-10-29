@@ -80,9 +80,9 @@ parse_neighbor_entry(char *line, FILE *fp, struct table *table)
 }
 
 /*
- * Reads the topology file named `filename` from the current working directory
- * and creates a new routing table.
- * Performs minimal semantic checking.
+ * Read the topology file named `filename` from the current working directory
+ * and create a new routing table.
+ * Perform minimal semantic checking.
  *
  * This function fails if the file is not in the right format.
  * Returns NULL on failure.
@@ -116,7 +116,6 @@ parse_topofile(char *filename)
     table = table_init(n, neighbors);
 
     servers = list_init();
-    servers->free = serventry_free;
     for (int i = 1; i <= n; i++) {
         if (!parse_entry_to_list(line, fp, servers)) {
             table_free(table);
