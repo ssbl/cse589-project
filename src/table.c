@@ -5,6 +5,7 @@
 
 #include "dvec.h"
 #include "list.h"
+#include "serventry.h"
 #include "table.h"
 
 
@@ -45,6 +46,7 @@ table_set_list(struct table *table, struct list *list)
 
     list_free(table->servers);
     table->servers = list;
+    list->free = serventry_free;
     return table;
 }
 
@@ -83,6 +85,22 @@ table_get_dvec(struct table *table, int from)
     assert(from > 0 && from <= MAXN);
 
     return table->costs[from];
+}
+
+struct serventry *
+table_get_server(struct table *table, int servid)
+{
+    assert(table);
+    assert(table->servers);
+    assert(servid > 0 && servid <= MAXN);
+
+    struct serventry *ret;
+    struct listitem *serv = table->servers->head;
+
+    while (((ret = serv->value) != NULL) && ret->servid != servid)
+        serv = serv->next;
+
+    return ret;
 }
 
 struct table *
