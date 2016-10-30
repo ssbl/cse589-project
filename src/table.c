@@ -88,7 +88,7 @@ table_get_dvec(struct table *table, int from)
 }
 
 struct serventry *
-table_get_server(struct table *table, int servid)
+table_lookup_server_by_id(struct table *table, int servid)
 {
     assert(table);
     assert(table->servers);
@@ -98,6 +98,22 @@ table_get_server(struct table *table, int servid)
     struct listitem *serv = table->servers->head;
 
     while (((ret = serv->value) != NULL) && ret->servid != servid)
+        serv = serv->next;
+
+    return ret;
+}
+
+struct serventry *
+table_lookup_server_by_addr(struct table *table, char *addr)
+{
+    assert(table);
+    assert(table->servers);
+    assert(addr);
+
+    struct listitem *serv = table->servers->head;
+    struct serventry *ret;
+
+    while (((ret = serv->value) != NULL) && strcmp(ret->addr, addr) != 0)
         serv = serv->next;
 
     return ret;
