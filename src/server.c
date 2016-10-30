@@ -38,18 +38,19 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
     struct sockaddr *servaddr;
 
     struct dvec *dv = table_get_dvec(table, servid);
-    struct list *ptr = table->servers;
+    struct listitem *ptr = table->servers->head;
     struct serventry *s_entry = NULL;
 
+    msg = msg_pack(servid, table);
+
     while (ptr) {
-        s_entry = ptr->item;
+        s_entry = ptr->value;
 
         if (s_entry->id == servid || !s_entry->neighbor) {
             ptr = ptr->next;
             continue;
         }
 
-        msg = msg_pack_dvec(dv); /* todo */
         servaddr = addr_from_ip(s_entry->addr);
         addrlen = sizeof(*servaddr);
 
@@ -86,18 +87,18 @@ serv_update(struct servinfo *servinfo, struct table *table, struct dvec *dv)
     assert(dv);
 
     ssize_t n;
-    char dvec_from_neighbor[RECVLINES + 1];
+    char msg[RECVLINES + 1];
     struct dvec *dv = NULL;
 
-    n = recvfrom(sockfd, dvec_from_neighbor, RECVLINES, 0, NULL, NULL);
+    n = recvfrom(sockfd, msg, RECVLINES, 0, NULL, NULL);
     if (n == -1) {
         perror("recvfrom");
         return E_SYSCALL;
     }
 
-    dv = msg_parse_dvec(dvec_from_neighbor);
+    dv = msg_unpack_to_dvec(msg); /* todo */
     if (dv == NULL)
-        return E_PARSEMSG;
+        return E_UNPACK;
 
     /* todo */
 

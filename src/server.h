@@ -9,7 +9,7 @@
 #define RECVLINES 128
 
 #define E_SYSCALL -1
-#define E_PARSEMSG -2
+#define E_UNPACK -2
 
 struct servinfo {
     int id;
