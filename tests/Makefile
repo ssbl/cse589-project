@@ -18,4 +18,7 @@ serventry: serventrytest.c serventry.o
 topo: topotest.c topo.o list.o dvec.o serventry.o table.o
 	$(CC) $(CFLAGS) $^ -o topotest
 
-.PHONY: dvec table serventry topo
+pack: packtest.c pack.o list.o dvec.o table.o serventry.o table.o topo.o
+	$(CC) $(CFLAGS) $^ -o packtest
+
+.PHONY: dvec table serventry topo pack
