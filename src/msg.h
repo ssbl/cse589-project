@@ -9,5 +9,7 @@
 #define FOURBYTELEN 5           /* 4 bytes + \0 character */
 
 unsigned char *msg_pack_dvec(int servid, struct table *table);
+struct dvec *msg_unpack_dvec(unsigned char *msg, int servid,
+                             struct table *table);
 
 #endif
