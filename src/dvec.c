@@ -71,8 +71,6 @@ dvec_update_cost(struct dvec *dvec, int to, int cost)
     while (ptr) {
         assert(ptr->value);
         dv_entry = ptr->value;
-        if (!dv_entry)
-            return NULL;
         if (dv_entry->to == to) {
             dv_entry->cost = cost;
             return dvec;
