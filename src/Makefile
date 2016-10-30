@@ -16,7 +16,10 @@ serventry: serventry.c
 topo: topo.c
 	$(CC) $(CFLAGS) $^ -c
 
+msg: msg.c list.o dvec.o table.o serventry.o topo.o
+	$(CC) $(CFLAGS) $^ -o msg
+
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c
 
-.PHONY: serventry topo
+.PHONY: list dvec table serventry topo msg
