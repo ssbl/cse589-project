@@ -48,10 +48,10 @@ unpack_header(unsigned char *msgbuf, uint16_t *n, char *servport,
     snprintf(servport, PORTLEN, "%d", port);
 
     ia.s_addr = addr;
-    if (!inet_ntop(AF_INET, &ia, servaddr, ADDRLEN))
+    if (!inet_ntop(AF_INET, &ia, servaddr, ADDRLEN)) {
+        perror("inet_ntop");
         return msgbuf;
-
-    printf("%d %s %s\n", *n, servaddr, servport);
+    }
 
     assert(ptr - msgbuf == 8);
     return ptr;
@@ -74,18 +74,24 @@ unpack_entry(unsigned char *msgbuf, struct serventry *s_entry,
     ptr = unpack_uint32(ptr, &addr);
     ia.s_addr = addr;
     inet_ntop(AF_INET, &ia, addrstr, ADDRLEN);
-    if (addrstr == NULL || strcmp(s_entry->addr, addrstr))
+    if (addrstr == NULL || strcmp(s_entry->addr, addrstr)) {
+        fprintf(stderr, "\nunpack: malformed address from %d", s_entry->servid);
         return msgbuf;
+    }
 
     ptr = unpack_uint16(ptr, &port);
     snprintf(portstr, PORTLEN, "%d", port);
-    if (strcmp(s_entry->port, portstr))
+    if (strcmp(s_entry->port, portstr)) {
+        fprintf(stderr, "\nmalformed port number from %d", s_entry->servid);
         return msgbuf;
+    }
 
     ptr = unpack_uint16(ptr, &servid); /* gobble 0 bytes */
     ptr = unpack_uint16(ptr, &servid);
-    if (servid != s_entry->servid)
+    if (servid != s_entry->servid) {
+        fprintf(stderr, "\ngot malformed servid, expected %d", s_entry->servid);
         return msgbuf;
+    }
 
     ptr = unpack_uint16(ptr, &cost);
     if (!dvec_add(dv, dvec_entry_new(servid, cost)))
@@ -118,7 +124,9 @@ unpack_entries(unsigned char *msgbuf, struct table *rcvrtable,
 /*
  * Deserialize a message into a distance vector structure.
  *
- * Expects n entries, returns NULL otherwise.
+ * Expects n entries, where n is the number of entries in `rcvrtable`.
+ * Caller must ensure that `msg` is at least (8 + 12*n) bytes.
+ * Will likely cause a buffer overflow if this isn't checked.
  */
 
 struct dvec *

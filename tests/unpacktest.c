@@ -11,7 +11,7 @@ main(void)
 {
     unsigned char *msg;
     struct dvec *dv;
-    struct table *table = parse_topofile("../tests/topofile");
+    struct table *table = parse_topofile("topofile");
     assert(table);
 
     msg = msg_pack_dvec(1, table);
