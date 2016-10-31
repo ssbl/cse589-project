@@ -112,7 +112,9 @@ dvec_entry_str(struct dvec_entry *dv_entry, char *dst)
     char cost_str[4];
 
     int to = dv_entry->to;
+    int via = dv_entry->via;
     int cost = dv_entry->cost;
+    int len = MAXLEN_DVEC_ENTRY_STR;
 
     assert(to > 0 && cost >= 0 && cost <= INF);
 
@@ -121,7 +123,7 @@ dvec_entry_str(struct dvec_entry *dv_entry, char *dst)
     else
         sprintf(cost_str, "%3d", cost);
 
-    snprintf(dst, MAXLEN_DVEC_ENTRY_STR, "--> %2d = %s\n", to, cost_str);
+    snprintf(dst, len, "--> %2d = %s via %2d\n", to, cost_str, via);
 
     return dst;
 }
