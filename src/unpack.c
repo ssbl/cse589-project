@@ -21,7 +21,6 @@ unpack_uint16(unsigned char *msgbuf, uint16_t *value)
     return msgbuf + 2;
 }
 
-
 static unsigned char *
 unpack_uint32(unsigned char *msgbuf, uint32_t *value)
 {
@@ -116,6 +115,12 @@ unpack_entries(unsigned char *msgbuf, struct table *rcvrtable,
     return msgptr;
 }
 
+/*
+ * Deserialize a message into a distance vector structure.
+ *
+ * Expects n entries, returns NULL otherwise.
+ */
+
 struct dvec *
 msg_unpack_dvec(unsigned char *msg, int servid, struct table *rcvrtable)
 {
@@ -134,33 +139,13 @@ msg_unpack_dvec(unsigned char *msg, int servid, struct table *rcvrtable)
     if (!(s_entry = table_lookup_server_by_addr(rcvrtable, servaddr))
         || n != rcvrtable->n) {
         fprintf(stderr, "\nrecv'd message from unknown server, ignoring...");
-        return NULL;            /* TODO write a notify function */
+        return NULL;
     }
-    
+
     senderid = s_entry->servid;
     dv = dvec_init(senderid);
 
     msgptr = unpack_entries(msgptr, rcvrtable, dv);
 
     return dv;
-}
-
-int
-main(void)
-{
-    unsigned char *msg;
-    struct dvec *dv;
-    struct table *table = parse_topofile("../tests/topofile");
-    assert(table);
-
-    msg = msg_pack_dvec(1, table);
-    assert(msg);
-
-    dv = msg_unpack_dvec(msg, 2, table);
-    assert(dv);
-    dvec_print(dv);
-
-    table_free(table);
-    dvec_free(dv);
-    return 0;
 }

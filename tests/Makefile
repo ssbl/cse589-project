@@ -21,4 +21,8 @@ topo: topotest.c topo.o list.o dvec.o serventry.o table.o
 pack: packtest.c pack.o list.o dvec.o table.o serventry.o table.o topo.o
 	$(CC) $(CFLAGS) $^ -o packtest
 
+unpack: unpacktest.c unpack.o pack.o list.o dvec.o table.o \
+		serventry.o table.o topo.o
+	$(CC) $(CFLAGS) $^ -o unpacktest
+
 .PHONY: dvec table serventry topo pack

@@ -1,6 +1,8 @@
 CC = gcc
 CFLAGS = -Wall -std=gnu99 -pedantic
 
+all: list dvec table serventry topo pack unpack
+
 list: list.c
 	$(CC) $(CFLAGS) $^ -c
 
@@ -16,10 +18,13 @@ serventry: serventry.c
 topo: topo.c
 	$(CC) $(CFLAGS) $^ -c
 
-msg: msg.c list.o dvec.o table.o serventry.o topo.o
-	$(CC) $(CFLAGS) $^ -o msg
+pack: pack.c
+	$(CC) $(CFLAGS) $^ -c
+
+unpack: unpack.c
+	$(CC) $(CFLAGS) $^ -c
 
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c
 
-.PHONY: list dvec table serventry topo msg
+.PHONY: list dvec table serventry topo pack unpack
