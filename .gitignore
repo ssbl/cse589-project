@@ -3,5 +3,4 @@
 *.o
 
 # binaries
-tests/dvectest
-tests/tabletest
+tests/*test
