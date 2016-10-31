@@ -10,6 +10,7 @@
 
 #define E_SYSCALL -1
 #define E_UNPACK -2
+#define E_LOOKUP -3
 
 struct servinfo {
     int id;
