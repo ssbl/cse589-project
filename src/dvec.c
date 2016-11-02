@@ -41,6 +41,10 @@ dvec_init(int from)
     return dv;
 }
 
+/*
+ * Add an entry to the distance vector, ordered by id.
+ */
+
 struct dvec *
 dvec_add(struct dvec *dvec, struct dvec_entry *dv_entry)
 {
@@ -48,8 +52,24 @@ dvec_add(struct dvec *dvec, struct dvec_entry *dv_entry)
     assert(dvec->list);
     assert(dv_entry);
 
-    if (list_add(dvec->list, dv_entry) == NULL)
-        return NULL;
+    struct dvec_entry *ref = NULL;
+    struct listitem *prev = NULL;
+    struct listitem *new = listitem_new(dv_entry);
+    struct listitem *ptr = dvec->list->head;
+
+    while (ptr) {
+        ref = ptr->value;
+        if (ref->to >= dv_entry->to)
+            break;
+        prev = ptr;
+        ptr = ptr->next;
+    }
+
+    if (prev)
+        prev->next = new;
+    else
+        dvec->list->head = new;
+    new->next = ptr;
 
     return dvec;
 }

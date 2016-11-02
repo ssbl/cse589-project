@@ -7,8 +7,8 @@ main(void)
     char dv_str[MAXLEN_DVEC_STR];
     struct dvec *dv = dvec_init(1);
 
-    dvec_add(dv, dvec_entry_new(2, 10));
-    dvec_add(dv, dvec_entry_new(3, 8));
+    dvec_add(dv, dvec_entry_new(3, 10));
+    dvec_add(dv, dvec_entry_new(2, 8));
     dvec_update_cost(dv, 3, INF);
 
     puts("Printing string repr:");
