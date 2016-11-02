@@ -194,3 +194,36 @@ table_str(struct table *table)
 
     return repr;
 }
+
+char *
+table_str_for_id(struct table *table)
+{
+    assert(table);
+
+    int mts = MAXLEN_TABLE_STR;
+    char cost[4];
+    char tmp[MAXLEN_TABLE_STR];
+    static char ret[MAXLEN_TABLE_STR];
+    struct dvec *dv = table_get_dvec(table, table->id);
+    struct listitem *ptr = dv->list->head;
+    struct dvec_entry *dv_entry = NULL;
+
+    strncat(ret, "DEST NEXTHOP COST\n", mts);
+
+    while (ptr) {
+        dv_entry = ptr->value;
+
+        if (dv_entry->cost == INF)
+            snprintf(cost, 4, "inf");
+        else
+            snprintf(cost, 4, "%3d", dv_entry->cost);
+
+        snprintf(tmp, mts, "%4d %7d %4s\n",
+                 dv_entry->to, dv_entry->via, cost);
+        strncat(ret, tmp, mts);
+
+        ptr = ptr->next;
+    }
+
+    return ret;
+}

@@ -9,7 +9,7 @@ vpath %.o $(SRC)
 dvec: dvectest.c dvec.o list.o
 	$(CC) $(CFLAGS) $^ -o dvectest
 
-table: tabletest.c table.o dvec.o list.o
+table: tabletest.c table.o dvec.o list.o serventry.o
 	$(CC) $(CFLAGS) $^ -o tabletest
 
 serventry: serventrytest.c serventry.o
