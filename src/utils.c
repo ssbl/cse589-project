@@ -1,7 +1,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -47,15 +49,52 @@ addr_from_ip(char *addr, char *port)
     return ss;
 }
 
-int
-main(void)
+char *
+get_localip(void)
 {
-    struct sockaddr *ret = addr_from_ip("192.168.1.3", "80");
+    static char ip[INET_ADDRSTRLEN];
 
-    if (ret)
-        puts("Got an address");
-    else
-        puts("Got nothing");
+    const char *retptr;
+    int sockfd, retval;
+    socklen_t socklen;
+    struct sockaddr_in *tmp, resolv_addr;
+    struct sockaddr_storage sa;
 
-    return 0;
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
+        perror("socket");
+        return NULL;
+    }
+
+    memset(&resolv_addr, 0, sizeof(resolv_addr));
+    resolv_addr.sin_family = AF_INET;
+    resolv_addr.sin_port = htons(53);
+    retval = inet_pton(AF_INET, RESOLV_IP, &resolv_addr.sin_addr);
+    if (retval <= 0) {
+        perror("inet_pton");
+        return NULL;
+    }
+
+    retval = connect(sockfd, (struct sockaddr *) &resolv_addr,
+                     sizeof(resolv_addr));
+    if (retval < 0) {
+        perror("connect");
+        return NULL;
+    }
+
+    socklen = sizeof(sa);
+    if (getsockname(sockfd, (struct sockaddr *) &sa, &socklen) < 0) {
+        perror("getsockname");
+        return NULL;
+    }
+
+    tmp = (struct sockaddr_in *) &sa;
+    retptr = inet_ntop(AF_INET, &tmp->sin_addr, ip, INET_ADDRSTRLEN);
+    if (!retptr) {
+        perror("inet_ntop");
+        return NULL;
+    }
+
+    close(sockfd);
+    return ip;
 }
