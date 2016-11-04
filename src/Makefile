@@ -24,7 +24,17 @@ pack: pack.c
 unpack: unpack.c
 	$(CC) $(CFLAGS) $^ -c
 
+utils: utils.c
+	$(CC) $(CFLAGS) $^ -c
+
+serv: server.c
+	$(CC) $(CFLAGS) $^ -c
+
+server: main.c server.o pack.o unpack.o list.o \
+		dvec.o serventry.o utils.o table.o topo.o
+	$(CC) $(CFLAGS) $^ -o server
+
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c
 
-.PHONY: list dvec table serventry topo pack unpack
+.PHONY: list dvec table serventry topo pack unpack server

@@ -15,7 +15,7 @@ table: tabletest.c table.o dvec.o list.o serventry.o
 serventry: serventrytest.c serventry.o
 	$(CC) $(CFLAGS) $^ -o serventrytest
 
-topo: topotest.c topo.o list.o dvec.o serventry.o table.o
+topo: topotest.c topo.o list.o dvec.o serventry.o table.o utils.o
 	$(CC) $(CFLAGS) $^ -o topotest
 
 pack: packtest.c pack.o list.o dvec.o table.o serventry.o table.o topo.o
@@ -25,4 +25,7 @@ unpack: unpacktest.c unpack.o pack.o list.o dvec.o table.o \
 		serventry.o table.o topo.o
 	$(CC) $(CFLAGS) $^ -o unpacktest
 
-.PHONY: dvec table serventry topo pack
+utils: utiltest.c utils.o
+	$(CC) $(CFLAGS) $^ -o utiltest
+
+.PHONY: dvec table serventry topo pack unpack utils
