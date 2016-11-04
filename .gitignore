@@ -3,4 +3,5 @@
 *.o
 
 # binaries
+src/server
 tests/*test
