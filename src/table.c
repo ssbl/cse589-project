@@ -131,6 +131,10 @@ table_update_cost(struct table *table, int from, int to, int cost)
     if (dvec_update_cost(dv, to, cost) == NULL)
         return NULL;
 
+    dv = table->costs[to];
+    if (dvec_update_cost(dv, from, cost) == NULL)
+        return NULL;
+
     return table;
 }
 
