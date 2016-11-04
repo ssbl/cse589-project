@@ -1,9 +1,17 @@
+#include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 #include "list.h"
-#include "msg.h"
+#include "dvec.h"
 #include "serventry.h"
 #include "table.h"
+#include "msg.h"
 #include "utils.h"
 #include "server.h"
 
@@ -33,7 +41,7 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
     assert(table);
     assert(table->costs);
 
-    int ret, servid = servinfo->id;
+    int ret, servid = servinfo->id, msglen;
     unsigned char *msg;
     socklen_t addrlen;
     struct sockaddr *servaddr;
@@ -42,21 +50,22 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
     struct serventry *s_entry = NULL;
 
     msg = msg_pack_dvec(servid, table);
+    msglen = 8 + table->n * 12;
 
     while (ptr) {
         s_entry = ptr->value;
 
-        if (s_entry->id == servid || !s_entry->neighbor) {
+        if (s_entry->servid == servid || !s_entry->neighbor) {
             ptr = ptr->next;
             continue;
         }
 
-        servaddr = addr_from_ip(s_entry->addr);
+        servaddr = addr_from_ip(s_entry->addr, s_entry->port);
         addrlen = sizeof(*servaddr);
 
-        ret = sendto(servinfo->sockfd, msg, strlen(msg), 0, servaddr, addrlen);
+        ret = sendto(servinfo->sockfd, msg, msglen, 0, servaddr, addrlen);
         if (ret == -1)
-            perror("sendto failed for server %d", s_entry->id);
+            fprintf(stderr, "sendto failed for server %d", s_entry->servid);
 
         ptr = ptr->next;
     }
@@ -72,9 +81,9 @@ serv_crash(struct servinfo *servinfo)
 
     int ret;
 
-    ret = shutdown(sockfd, SHUT_WR);
+    ret = close(servinfo->id);
     if (ret == -1)
-        perror("shutdown");
+        perror("close");
 
     return ret;
 }
@@ -86,22 +95,23 @@ serv_update(struct servinfo *servinfo, struct table *table, struct dvec *dv)
     assert(table);
     assert(dv);
 
+    int cost, cost_to_sender;
     int servid = servinfo->id, senderid;
     ssize_t n;
-    char msg[RECVLINES + 1];
+    unsigned char msg[RECVLINES + 1];
     struct dvec *recvd_dv = NULL, *our_dv = NULL;
     struct dvec_entry *recvd_dv_entry, *our_dv_entry;
     struct listitem *recvd_dvptr, *our_dvptr;
 
     /* todo: use a specific address, so that we don't receive it from anyone */
-    n = recvfrom(sockfd, msg, RECVLINES, 0, NULL, NULL);
+    n = recvfrom(servinfo->sockfd, msg, RECVLINES, 0, NULL, NULL);
     if (n == -1) {
         perror("recvfrom");
         return E_SYSCALL;
     }
 
     recvd_dv = msg_unpack_dvec(msg, servid, table);
-    if (!dv)
+    if (!recvd_dv || recvd_dv->from == servid)
         return E_UNPACK;
 
     our_dv = table_get_dvec(table, servid);
@@ -109,15 +119,19 @@ serv_update(struct servinfo *servinfo, struct table *table, struct dvec *dv)
         return E_LOOKUP;
 
     senderid = recvd_dv->from;
+    cost_to_sender = table_get_cost(table, servid, senderid);
+    assert(cost >= 0);
+
     recvd_dvptr = recvd_dv->list->head;
     our_dvptr = our_dv->list->head;
 
-    while (our_dvptr && recvd_dvptr) { /* todo: add entries to dvec inorder */
+    while (our_dvptr && recvd_dvptr) {
         our_dv_entry = our_dvptr->value;
         recvd_dv_entry = recvd_dvptr->value;
 
-        if (our_dv_entry->cost > recvd_dv_entry->cost) {
-            our_dv_entry->cost = recvd_dv_entry->cost;
+        cost = cost_to_sender + recvd_dv_entry->cost;
+        if (our_dv_entry->cost > cost) {
+            our_dv_entry->cost = cost;
             our_dv_entry->via = senderid;
         }
 
