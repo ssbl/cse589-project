@@ -16,6 +16,7 @@ main(void)
         for (struct listitem *ptr = table->servers->head; ptr; ptr = ptr->next)
             printf("%s", serventry_str(ptr->value));
         printf("%s", table_str(table));
+        puts(table_str_for_id(table));
         table_free(table);
     } else
         puts("parse error");

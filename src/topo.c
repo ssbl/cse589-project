@@ -1,11 +1,13 @@
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "list.h"
 #include "dvec.h"
 #include "serventry.h"
 #include "table.h"
 #include "topo.h"
+#include "utils.h"
 
 
 static inline int *
@@ -41,12 +43,11 @@ parse_entry_to_list(char *line, FILE *fp, struct list *list)
     return list;
 }
 
-static struct dvec *
+static struct table *
 parse_neighbor_entry(char *line, FILE *fp, struct table *table)
 {
     assert(table);
     int servid, neighbor, cost;
-    struct dvec *dv;
     struct listitem *ptr;
     struct serventry *s_entry;
 
@@ -72,11 +73,39 @@ parse_neighbor_entry(char *line, FILE *fp, struct table *table)
         ptr = ptr->next;
     }
 
-    dv = table->costs[servid];
-    dv->from = servid;
-    dvec_update_cost(dv, neighbor, cost);
+    table = table_update_cost(table, servid, neighbor, cost);
 
-    return dv;
+    return table;
+}
+
+static int
+check_for_ip(struct list *servers)
+{
+    assert(servers);
+
+    int servid, count = 0;
+    char *localip;
+    struct serventry *s_entry = NULL;
+    struct listitem *ptr = servers->head;
+
+    localip = get_localip();
+    if (!localip)
+        return E_LOCALIP;
+
+    while (ptr) {
+        s_entry = ptr->value;
+        if (!strcmp(s_entry->addr, localip)) {
+            if (count == 1)
+                return E_DUPE_IP;
+            else {
+                servid = s_entry->servid;
+                count += 1;
+            }
+        }
+        ptr = ptr->next;
+    }
+
+    return servid;
 }
 
 /*
@@ -95,7 +124,7 @@ parse_topofile(char *filename)
 
     FILE *fp;
     int n, neighbors;
-    char line[MAXLEN_LINE];
+    char *localip, line[MAXLEN_LINE];
     struct list *servers = NULL;
     struct table *table = NULL;
 
@@ -105,32 +134,48 @@ parse_topofile(char *filename)
         return NULL;
     }
 
-    if (!read_int(line, fp, &n) || !read_int(line, fp, &neighbors))
+    if (!read_int(line, fp, &n) || !read_int(line, fp, &neighbors)) {
+        fprintf(stderr, "parse error: expected 2 numbers, "
+                        "each on a separate line\n");
         return NULL;
+    }
 
-    if (n < 0 || n > MAXN)
+    if (n <= 0 || n > MAXN) {
+        fprintf(stderr, "error: number out of range(8)\n");
         return NULL;
-    else if (neighbors < 0 || neighbors > MAXN || neighbors > n)
+    } else if (neighbors < 0 || neighbors > MAXN || neighbors > n) {
+        fprintf(stderr, "error: invalid neighbor count\n");
         return NULL;
+    }
 
     table = table_init(n, neighbors);
+    localip = get_localip();
+    if (!localip)
+        goto fail;
 
     servers = list_init();
-    for (int i = 1; i <= n; i++) {
+    for (int i = 1; i <= n; i++)
         if (!parse_entry_to_list(line, fp, servers)) {
-            table_free(table);
-            return NULL;
+            fprintf(stderr, "error: server entry not in the correct format\n");
+            goto fail;
         }
+
+    if ((table->id = check_for_ip(servers)) < 0) {
+        fprintf(stderr, "error: couldn't find local entry");
+        goto fail;
     }
 
-    for (int i = 1; i <= neighbors; i++) {
+    for (int i = 1; i <= neighbors; i++)
         if (!parse_neighbor_entry(line, fp, table)) {
-            table_free(table);
-            return NULL;
+            fprintf(stderr, "error: cost entry not in the correct format\n");
+            goto fail;
         }
-    }
 
     fclose(fp);
     table_set_list(table, servers);
     return table;
+
+fail:
+    table_free(table);
+    return NULL;
 }
