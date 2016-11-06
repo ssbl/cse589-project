@@ -135,16 +135,15 @@ parse_topofile(char *filename)
     }
 
     if (!read_int(line, fp, &n) || !read_int(line, fp, &neighbors)) {
-        fprintf(stderr, "parse error: expected 2 numbers, "
-                        "each on a separate line\n");
+        fprintf(stderr, "expected 2 numbers, each on a separate line\n");
         return NULL;
     }
 
     if (n <= 0 || n > MAXN) {
-        fprintf(stderr, "error: number out of range(8)\n");
+        fprintf(stderr, "number out of range(8)\n");
         return NULL;
     } else if (neighbors < 0 || neighbors > MAXN || neighbors > n) {
-        fprintf(stderr, "error: invalid neighbor count\n");
+        fprintf(stderr, "invalid neighbor count\n");
         return NULL;
     }
 
@@ -156,18 +155,18 @@ parse_topofile(char *filename)
     servers = list_init();
     for (int i = 1; i <= n; i++)
         if (!parse_entry_to_list(line, fp, servers)) {
-            fprintf(stderr, "error: server entry not in the correct format\n");
+            fprintf(stderr, "server entry not in the correct format\n");
             goto fail;
         }
 
     if ((table->id = check_for_ip(servers)) < 0) {
-        fprintf(stderr, "error: couldn't find local entry");
+        fprintf(stderr, "couldn't find local entry\n");
         goto fail;
     }
 
     for (int i = 1; i <= neighbors; i++)
         if (!parse_neighbor_entry(line, fp, table)) {
-            fprintf(stderr, "error: cost entry not in the correct format\n");
+            fprintf(stderr, "cost entry not in the correct format\n");
             goto fail;
         }
 
