@@ -26,6 +26,7 @@ struct dvec *table_get_dvec(struct table *table, int from);
 struct serventry *table_lookup_server_by_id(struct table *table, int servid);
 struct serventry *table_lookup_server_by_addr(struct table *table, char *addr);
 struct table *table_update_cost(struct table *table, int from, int to, int cost);
+int table_is_neighbor(struct table *table, int servid);
 void table_free(struct table *table);
 char *table_str(struct table *table);
 char *table_str_for_id(struct table *table);

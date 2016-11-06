@@ -138,6 +138,21 @@ table_update_cost(struct table *table, int from, int to, int cost)
     return table;
 }
 
+int
+table_is_neighbor(struct table *table, int servid)
+{
+    assert(table);
+    assert(servid > 0 && servid <= MAXN);
+
+    struct serventry *s_entry = NULL;
+
+    s_entry = table_lookup_server_by_id(table, servid);
+    if (!s_entry)
+        return 0;
+
+    return s_entry->neighbor;
+}
+
 void
 table_free(struct table *table)
 {
@@ -207,12 +222,13 @@ table_str_for_id(struct table *table)
     int mts = MAXLEN_TABLE_STR;
     char cost[4];
     char tmp[MAXLEN_TABLE_STR];
-    static char ret[MAXLEN_TABLE_STR];
+    static char ret_id_str[MAXLEN_TABLE_STR];
     struct dvec *dv = table_get_dvec(table, table->id);
     struct listitem *ptr = dv->list->head;
     struct dvec_entry *dv_entry = NULL;
 
-    strncat(ret, "DEST NEXTHOP COST\n", mts);
+    memset(ret_id_str, 0, sizeof ret_id_str);
+    strncat(ret_id_str, "DEST NEXTHOP COST\n", mts);
 
     while (ptr) {
         dv_entry = ptr->value;
@@ -224,10 +240,10 @@ table_str_for_id(struct table *table)
 
         snprintf(tmp, mts, "%4d %7d %4s\n",
                  dv_entry->to, dv_entry->via, cost);
-        strncat(ret, tmp, mts);
+        strncat(ret_id_str, tmp, mts);
 
         ptr = ptr->next;
     }
 
-    return ret;
+    return ret_id_str;
 }
