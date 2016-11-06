@@ -23,6 +23,6 @@ struct servinfo {
 struct servinfo *servinfo_init(int id, int sockfd, time_t interval);
 int serv_broadcast(struct servinfo *servinfo, struct table *table);
 int serv_crash(struct servinfo *servinfo);
-int serv_update(struct servinfo *servinfo, struct table *table, struct dvec *dv);
+int serv_update(struct servinfo *servinfo, struct table *table);
 
 #endif

@@ -89,11 +89,10 @@ serv_crash(struct servinfo *servinfo)
 }
 
 int
-serv_update(struct servinfo *servinfo, struct table *table, struct dvec *dv)
+serv_update(struct servinfo *servinfo, struct table *table)
 {
     assert(servinfo);
     assert(table);
-    assert(dv);
 
     int cost, cost_to_sender;
     int servid = servinfo->id, senderid;
