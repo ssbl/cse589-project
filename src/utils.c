@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -97,4 +99,58 @@ get_localip(void)
 
     close(sockfd);
     return ip;
+}
+
+int
+listen_socket(char *port)
+{
+    assert(port);
+
+    int sockfd, p;
+    struct sockaddr_in sa;
+
+    char *endptr;
+
+    p = strtol(port, &endptr, 10);
+    if (errno == ERANGE || *endptr != '\0') {
+        fprintf(stderr, "invalid port number\n");
+        return -1;
+    }
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd == 1) {
+        perror("socket");
+        return -1;
+    }
+
+    memset(&sa, 0, sizeof(sa));
+    sa.sin_port = htons(p);
+    sa.sin_family = AF_INET;
+    if (bind(sockfd, (struct sockaddr *) &sa, sizeof(sa)) == -1) {
+        perror("bind");
+        close(sockfd);
+        return -1;
+    }
+
+    printf("listening on port %d\n", p);
+    return sockfd;
+}
+
+int
+max(int a, int b)
+{
+    if (a > b)
+        return a;
+    return b;
+}
+
+int
+validate_strtol(char *s)
+{
+    char *endptr;
+    int l = strtol(s, &endptr, 10);
+
+    if (errno == ERANGE || *endptr != '\0')
+        return -1;
+    return l;
 }
