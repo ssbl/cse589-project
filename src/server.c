@@ -62,6 +62,8 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
         }
 
         servaddr = addr_from_ip(s_entry->addr, s_entry->port);
+        if (!servaddr)          /* TODO: debug this */
+            continue;
         addrlen = sizeof(*servaddr);
 
         fprintf(stderr, "sending to server %d\n", s_entry->servid);
