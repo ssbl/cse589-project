@@ -115,13 +115,13 @@ main(int argc, char *argv[])
                     }
 
                     int from = validate_strtol(tokens[1]);
-                    if (from < 0 || from > routing_table->n) {
+                    if (from < 1 || from > routing_table->n) {
                         fprintf(stderr, "invalid `src' value: %s\n", tokens[1]);
                         continue;
                     }
 
                     int to = validate_strtol(tokens[2]);
-                    if (to < 0 || to > routing_table->n) {
+                    if (to < 1 || to > routing_table->n) {
                         fprintf(stderr, "invalid `dest' value: %s\n", tokens[2]);
                         continue;
                     } /* TODO: check if to == from */
@@ -129,7 +129,7 @@ main(int argc, char *argv[])
                     int cost = validate_strtol(tokens[3]);
                     if (!strcasecmp("inf", tokens[3])) {
                         cost = INF;
-                    } else if (cost < 0) {
+                    } else if (cost <= 0) {
                         fprintf(stderr, "invalid `cost' value: %s\n", tokens[3]);
                         continue;
                     }
