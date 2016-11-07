@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 #define RECVLINES 128
+#define MAX_TIMEOUTS 3
 
 #define E_SYSCALL -1
 #define E_UNPACK -2

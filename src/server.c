@@ -29,9 +29,38 @@ servinfo_init(int id, int sockfd, time_t interval)
 
     servinfo->id = id;
     servinfo->sockfd = sockfd;
+    servinfo->is_alive = 1;
     servinfo->interval = interval;
 
     return servinfo;
+}
+
+void
+refresh_timeouts(struct servinfo *servinfo, struct table *table, int servid)
+{
+    assert(servinfo);
+    assert(servinfo->timeouts);
+    assert(servid != servinfo->id);
+
+    int neighbor_id, our_id = servinfo->id;
+    struct serventry *s_entry = NULL;
+    struct listitem *ptr = table->servers->head;
+
+    while (ptr) {
+        s_entry = ptr->value;
+        neighbor_id = s_entry->servid;
+
+        if (neighbor_id == our_id)
+            ;                   /* skip our entry */
+        else if (neighbor_id == servid)
+            s_entry->timeouts = 0;
+        else if (s_entry->timeouts >= MAX_TIMEOUTS + 1)
+            table_update_cost(table, our_id, neighbor_id, INF);
+        else
+            s_entry->timeouts += 1;
+
+        ptr = ptr->next;
+    }
 }
 
 int
@@ -139,5 +168,6 @@ serv_update(struct servinfo *servinfo, struct table *table)
         recvd_dvptr = recvd_dvptr->next;
     }
 
+    refresh_timeouts(servinfo, table, senderid);
     return 0;
 }

@@ -20,6 +20,7 @@ serventry_new(int servid, char *addr, char *port)
 
     s_entry->servid = servid;
     s_entry->neighbor = 0;
+    s_entry->timeouts = 0;
     s_entry->port = strdup(port);
     s_entry->addr = strdup(addr);
 
