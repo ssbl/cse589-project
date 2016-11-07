@@ -20,7 +20,7 @@
 int
 main(int argc, char *argv[])
 {
-    int interval, sockfd, self_id;
+    int interval, sockfd, self_id, packets = 0;
     char *port;
     struct timeval timeout;
     struct table *routing_table = NULL;
@@ -143,6 +143,8 @@ main(int argc, char *argv[])
                     serv_broadcast(servinfo, routing_table);
                 } else if (!strcasecmp("packets", cmd_name)) {
                     /* no args */
+                    printf("packets received: %d\n", packets);
+                    packets = 0;
                 } else if (!strcasecmp("disable", cmd_name)) {
                     /* disable servid */
                     if (!tokens[1]) {
