@@ -20,35 +20,28 @@ addr_from_ip(char *addr, char *port)
     assert(addr);
     assert(port);
 
-    int ret;
-    struct addrinfo hints;
-    struct addrinfo *p, *ai;
-    static struct sockaddr *ss; /* return value */
+    int ret, portnum;
+    static struct sockaddr_in ss;
+    static struct sockaddr *sa_addr; /* return value */
 
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_DGRAM;
+    memset(&ss, 0, sizeof ss);
+    ss.sin_family = AF_INET;
 
-    ret = getaddrinfo(addr, port, &hints, &ai);
-    if (ret != 0) {
-        perror("getaddrinfo");
-        freeaddrinfo(ai);
+    ret = inet_pton(AF_INET, addr, &(ss.sin_addr));
+    if (!ret) {
+        fprintf(stderr, "addr_from_ip: address not in correct format\n");
         return NULL;
     }
 
-    for (p = ai; p != NULL; p = p->ai_next) {
-        if (p->ai_family == AF_INET) {
-            ss = p->ai_addr;
-            break;
-        }
-    }
-
-    if (p == NULL) {
-        freeaddrinfo(ai);
+    portnum = validate_strtol(port);
+    if (portnum < 0) {
+        fprintf(stderr, "addr_from_ip: invalid port\n");
         return NULL;
     }
+    ss.sin_port = htons(portnum);
 
-    return ss;
+    sa_addr = (struct sockaddr *) &ss;
+    return sa_addr;
 }
 
 char *
