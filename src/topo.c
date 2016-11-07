@@ -164,6 +164,7 @@ parse_topofile(char *filename)
         goto fail;
     }
 
+    table_set_list(table, servers);
     for (int i = 1; i <= neighbors; i++)
         if (!parse_neighbor_entry(line, fp, table)) {
             fprintf(stderr, "cost entry not in the correct format\n");
@@ -171,7 +172,6 @@ parse_topofile(char *filename)
         }
 
     fclose(fp);
-    table_set_list(table, servers);
     return table;
 
 fail:
