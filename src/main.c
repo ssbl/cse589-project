@@ -70,7 +70,7 @@ main(int argc, char *argv[])
         int nready, maxfd = sockfd;
         fd_set rfds;
 
-        int cmdlen;
+        int cmdlen, ret;
         char inputline[MAXLEN_LINE + 1];
         char **tokens, *cmd_name;
 
@@ -84,18 +84,30 @@ main(int argc, char *argv[])
         nready = select(maxfd + 1, &rfds, NULL, NULL, &timeout);
         if (nready == -1 || errno == EINTR)
             continue;
-        if (nready == 0)
-            continue;           /* read, broadcast here */
+        if (nready == 0) {      /* read, broadcast here */
+            printf("sending periodic update\n");
+            serv_broadcast(servinfo, routing_table);
+            continue;
+        }
 
         /* printf("waited %d seconds, got %d fds\n", interval, nready); */
 
         if (FD_ISSET(sockfd, &rfds)) {
             /* handle update reads here */
-            serv_update(servinfo, routing_table);
+            ret = serv_update(servinfo, routing_table);
+            if (ret == E_SYSCALL)
+                fprintf(stderr, "update error: system call\n");
+            else if (ret == E_UNPACK)
+                fprintf(stderr, "update error: bad message format\n");
+            else if (ret == E_LOOKUP)
+                fprintf(stderr, "update error: lookup failed\n");
+            else
+                packets += 1;
         }
 
         /* TODO: clarify id namespace */
         /* TODO: clarify about crash behaviour, should we reboot? */
+        /* TODO: ask about differing bidirectional costs */
         if (FD_ISSET(STDIN_FILENO, &rfds)) {
             if (!fgets(inputline, MAXLEN_LINE, stdin) || ferror(stdin)) {
                 fprintf(stderr, "stopping\n");
@@ -140,7 +152,8 @@ main(int argc, char *argv[])
                         fprintf(stderr, "arguments out of range\n");
                 } else if (!strcasecmp("step", cmd_name)) {
                     /* no args */
-                    serv_broadcast(servinfo, routing_table);
+                    if (!serv_broadcast(servinfo, routing_table))
+                        printf("sent a packet to neighbors\n");
                 } else if (!strcasecmp("packets", cmd_name)) {
                     /* no args */
                     printf("packets received: %d\n", packets);

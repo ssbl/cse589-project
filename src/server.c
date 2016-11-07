@@ -62,7 +62,7 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
         }
 
         servaddr = addr_from_ip(s_entry->addr, s_entry->port);
-        if (!servaddr)          /* TODO: debug this */
+        if (!servaddr)
             continue;
         addrlen = sizeof(*servaddr);
 
@@ -125,7 +125,7 @@ serv_update(struct servinfo *servinfo, struct table *table)
 
     senderid = recvd_dv->from;
     cost_to_sender = table_get_cost(table, servid, senderid);
-    assert(cost >= 0);
+    assert(cost_to_sender >= 0);
 
     recvd_dvptr = recvd_dv->list->head;
     our_dvptr = our_dv->list->head;
