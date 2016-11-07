@@ -11,5 +11,6 @@ char *get_localip(void);
 int listen_socket(char *port);
 int max(int a, int b);
 int validate_strtol(char *s);
+char **tokenize(char *inputline);
 
 #endif

@@ -30,11 +30,8 @@ utils: utils.c
 serv: server.c
 	$(CC) $(CFLAGS) $^ -c
 
-cmd: cmd.c
-	$(CC) $(CFLAGS) $^ -c
-
 server: main.c server.o pack.o unpack.o list.o \
-		dvec.o serventry.o utils.o table.o topo.o cmd.o
+		dvec.o serventry.o utils.o table.o topo.o
 	$(CC) $(CFLAGS) $^ -o server
 
 %.o: %.c

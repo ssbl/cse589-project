@@ -13,7 +13,6 @@
 #include "topo.h"
 #include "msg.h"
 #include "server.h"
-#include "cmd.h"
 #include "utils.h"
 #include "main.h"
 
@@ -116,7 +115,7 @@ main(int argc, char *argv[])
                 cmdlen = strlen(inputline);
                 inputline[cmdlen - 1] = '\0';
 
-                tokens = cmd_tokenize(inputline, routing_table, servinfo);
+                tokens = tokenize(inputline, routing_table, servinfo);
                 if (tokens == NULL || !tokens[0])
                     continue;
 

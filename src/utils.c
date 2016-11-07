@@ -147,3 +147,31 @@ validate_strtol(char *s)
         return -1;
     return l;
 }
+
+char **
+tokenize(char *inputline)
+{
+    assert(inputline);
+    assert(table);
+    assert(servinfo);
+
+    int tok;
+    static char *tokens[4];     /* return value */
+    char *str, *token, *delim, *saveptr;
+
+    for (tok = 0, str = inputline, delim = " \n"; ; tok++, str = NULL) {
+        token = strtok_r(str, delim, &saveptr);
+        if (!token)
+            break;
+        tokens[tok] = token;
+    }
+
+    if (!tok)
+        return NULL;
+    if (tok == 5) {
+        fprintf(stderr, "too many arguments in command\n");
+        return NULL;
+    }
+
+    return tokens;
+}
