@@ -16,6 +16,7 @@ struct servinfo {
     int id;
     int sockfd;
     int recvd;
+    int is_alive;
     time_t interval;
 };
 

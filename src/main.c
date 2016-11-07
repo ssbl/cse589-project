@@ -105,8 +105,9 @@ main(int argc, char *argv[])
         }
 
         /* TODO: clarify id namespace */
-        /* TODO: clarify about crash behaviour, should we reboot? */
         /* TODO: ask about differing bidirectional costs */
+        /* TODO: verify update function */
+        /* TODO: check if addresses and ports in topology file are valid */
         if (FD_ISSET(STDIN_FILENO, &rfds)) {
             if (!fgets(inputline, MAXLEN_LINE, stdin) || ferror(stdin)) {
                 fprintf(stderr, "stopping\n");

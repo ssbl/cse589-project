@@ -81,15 +81,10 @@ int
 serv_crash(struct servinfo *servinfo)
 {
     assert(servinfo);
-    assert(servinfo->sockfd > 0);
 
-    int ret;
+    servinfo->is_alive = 0;
 
-    ret = close(servinfo->id);
-    if (ret == -1)
-        perror("close");
-
-    return ret;
+    return 0;
 }
 
 int
