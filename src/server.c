@@ -51,6 +51,7 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
 
     msg = msg_pack_dvec(servid, table);
     msglen = 8 + table->n * 12;
+    msg[msglen] = 0;
 
     while (ptr) {
         s_entry = ptr->value;
@@ -63,6 +64,7 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
         servaddr = addr_from_ip(s_entry->addr, s_entry->port);
         addrlen = sizeof(*servaddr);
 
+        fprintf(stderr, "sending to server %d\n", s_entry->servid);
         ret = sendto(servinfo->sockfd, msg, msglen, 0, servaddr, addrlen);
         if (ret == -1)
             fprintf(stderr, "sendto failed for server %d", s_entry->servid);
@@ -94,7 +96,7 @@ serv_update(struct servinfo *servinfo, struct table *table)
     assert(servinfo);
     assert(table);
 
-    int cost, cost_to_sender;
+    int cost, cost_to_sender, msglen = 8 + table->n * 12;
     int servid = servinfo->id, senderid;
     ssize_t n;
     unsigned char msg[RECVLINES + 1];
@@ -103,13 +105,15 @@ serv_update(struct servinfo *servinfo, struct table *table)
     struct listitem *recvd_dvptr, *our_dvptr;
 
     /* todo: use a specific address, so that we don't receive it from anyone */
-    n = recvfrom(servinfo->sockfd, msg, RECVLINES, 0, NULL, NULL);
+    n = recvfrom(servinfo->sockfd, msg, msglen, 0, NULL, NULL);
+    fprintf(stderr, "received %d bytes\n", (int) n);
     if (n == -1) {
         perror("recvfrom");
         return E_SYSCALL;
     }
 
     recvd_dv = msg_unpack_dvec(msg, servid, table);
+    dvec_print(recvd_dv);
     if (!recvd_dv || recvd_dv->from == servid)
         return E_UNPACK;
 

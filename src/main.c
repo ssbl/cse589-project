@@ -39,6 +39,7 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    printf("parsing topology file...\n");
     routing_table = parse_topofile(argv[2]);
     if (!routing_table) {
         fprintf(stderr, "error parsing file: %s\n", argv[2]);
@@ -53,6 +54,7 @@ main(int argc, char *argv[])
     }
 
     self_id = routing_table->id;
+    printf("found matching entry with id %d\n", self_id);
     our_entry = table_lookup_server_by_id(routing_table, self_id);
     port = our_entry->port;
 
