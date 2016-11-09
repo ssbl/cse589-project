@@ -69,7 +69,7 @@ refresh_timeouts(struct servinfo *servinfo, struct table *table)
         if (neighbor_id == our_id)
             ;                   /* skip our entry */
         else if (s_entry->lastrecvd >= 3 * interval)
-            table_update_cost(table, our_id, neighbor_id, INF);
+            table_update_cost(table, neighbor_id, INF);
         else
             s_entry->lastrecvd += interval;
 
@@ -157,13 +157,13 @@ serv_update(struct servinfo *servinfo, struct table *table)
         return E_UNPACK;
     /* dvec_print(recvd_dv); */
 
-    our_dv = table_get_dvec(table, servid);
+    our_dv = table->costs;
     if (!our_dv)                /* we've made a big mistake */
         return E_LOOKUP;
 
     senderid = recvd_dv->from;
     printf("RECEIVED A MESSAGE FROM SERVER %d\n", senderid);
-    cost_to_sender = table_get_cost(table, servid, senderid);
+    cost_to_sender = table_get_cost(table, senderid);
     assert(cost_to_sender >= 0);
 
     recvd_dvptr = recvd_dv->list->head;

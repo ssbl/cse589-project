@@ -14,18 +14,16 @@ struct table {
     int id;                            /* id of this server */
     int neighbors;                     /* number of neighbors  */
     struct list *servers;              /* list of all servers */
-    struct dvec *costs[MAXN];          /* distance vectors */
+    struct dvec *costs;                /* distance vectors */
 };
 
 
-struct table *table_init(int n, int neighbors);
+struct table *table_init(int servid, int n, int neighbors);
 struct table *table_set_list(struct table *table, struct list* servers);
-struct table *table_add_item(struct table *table, int from, int to, int cost);
-int table_get_cost(struct table *table, int from, int to);
-struct dvec *table_get_dvec(struct table *table, int from);
+int table_get_cost(struct table *table, int to);
 struct serventry *table_lookup_server_by_id(struct table *table, int servid);
 struct serventry *table_lookup_server_by_addr(struct table *table, char *addr);
-struct table *table_update_cost(struct table *table, int from, int to, int cost);
+struct table *table_update_cost(struct table *table, int to, int cost);
 int table_is_neighbor(struct table *table, int servid);
 void table_free(struct table *table);
 char *table_str(struct table *table);

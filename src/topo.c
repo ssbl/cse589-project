@@ -47,6 +47,7 @@ static struct table *
 parse_neighbor_entry(char *line, FILE *fp, struct table *table)
 {
     assert(table);
+
     int servid, neighbor, cost;
     struct listitem *ptr;
     struct serventry *s_entry;
@@ -59,8 +60,6 @@ parse_neighbor_entry(char *line, FILE *fp, struct table *table)
         return NULL;
 
     assert(cost > 0);
-    assert(servid > 0 && servid <= table->n);
-    assert(neighbor > 0 && neighbor <= table->n);
     assert(neighbor != servid);
 
     ptr = table->servers->head;
@@ -73,7 +72,8 @@ parse_neighbor_entry(char *line, FILE *fp, struct table *table)
         ptr = ptr->next;
     }
 
-    table = table_update_cost(table, servid, neighbor, cost);
+    if (!dvec_add(table->costs, dvec_entry_new(neighbor, cost)))
+        return NULL;
 
     return table;
 }
@@ -123,7 +123,7 @@ parse_topofile(char *filename)
     assert(filename);
 
     FILE *fp;
-    int n, neighbors;
+    int n, neighbors, servid;
     char *localip, line[MAXLEN_LINE];
     struct list *servers = NULL;
     struct table *table = NULL;
@@ -147,25 +147,25 @@ parse_topofile(char *filename)
         return NULL;
     }
 
-    table = table_init(n, neighbors);
     localip = get_localip();
     if (!localip)
         goto fail;
 
     servers = list_init();
-    for (int i = 1; i <= n; i++)
+    for (int i = 0; i < n; i++)
         if (!parse_entry_to_list(line, fp, servers)) {
             fprintf(stderr, "server entry not in the correct format\n");
             goto fail;
         }
 
-    if ((table->id = check_for_ip(servers)) < 0) {
+    if ((servid = check_for_ip(servers)) < 0) {
         fprintf(stderr, "couldn't find local entry\n");
         goto fail;
     }
+    table = table_init(servid, n, neighbors);
 
     table_set_list(table, servers);
-    for (int i = 1; i <= neighbors; i++)
+    for (int i = 0; i < neighbors; i++)
         if (!parse_neighbor_entry(line, fp, table)) {
             fprintf(stderr, "cost entry not in the correct format\n");
             goto fail;

@@ -64,7 +64,7 @@ pack_entry(unsigned char *msgbuf, uint16_t servid, struct table *table,
     msgptr = pack_uint16(msgptr, 0);
     msgptr = pack_uint16(msgptr, s_entry->servid);
     msgptr = pack_uint16(msgptr,
-                         table_get_cost(table, servid, s_entry->servid));
+                         table_get_cost(table, s_entry->servid));
 
     return msgptr;
 }
@@ -97,7 +97,6 @@ pack_entries(unsigned char *msgbuf, int servid, struct table *table)
 unsigned char *
 msg_pack_dvec(int servid, struct table *table)
 {
-    assert(servid > 0 && servid <= MAXN);
     assert(table);
     assert(table->servers);
 

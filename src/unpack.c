@@ -140,7 +140,6 @@ struct dvec *
 msg_unpack_dvec(unsigned char *msg, int servid, struct table *rcvrtable)
 {
     assert(msg);
-    assert(servid > 0 && servid <= MAXN);
     assert(rcvrtable);
     assert(rcvrtable->servers);
 

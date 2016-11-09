@@ -150,7 +150,7 @@ main(int argc, char *argv[])
                         continue;
                     }
 
-                    if (!table_update_cost(routing_table, to, from, cost))
+                    if (!table_update_cost(routing_table, to, cost))
                         fprintf(stderr, "update: arguments out of range\n");
                 } else if (!strcasecmp("step", cmd_name)) {
                     /* no args */
@@ -179,7 +179,7 @@ main(int argc, char *argv[])
                         continue;
                     }
 
-                    if (!table_update_cost(routing_table, self_id, servid, INF))
+                    if (!table_update_cost(routing_table, servid, INF))
                         fprintf(stderr, "disable: invalid servid: %s", tokens[1]);
                 } else if (!strcasecmp("crash", cmd_name)) {
                     /* no args */
