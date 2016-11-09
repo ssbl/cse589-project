@@ -52,6 +52,9 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    timeout.tv_sec = interval;
+    timeout.tv_usec = 0;
+
     self_id = routing_table->id;
     printf("found matching entry with id %d\n", self_id);
     our_entry = table_lookup_server_by_id(routing_table, self_id);
@@ -77,16 +80,16 @@ main(int argc, char *argv[])
         FD_SET(sockfd, &rfds);
         FD_SET(STDIN_FILENO, &rfds);
 
-        timeout.tv_sec = interval;
-        timeout.tv_usec = 0;
-
         nready = select(maxfd + 1, &rfds, NULL, NULL, &timeout);
         if (nready == -1 || errno == EINTR)
             continue;
-        if (nready == 0 && servinfo->is_alive) { /* read, broadcast here */
+
+        if (timeout.tv_sec == 0 && servinfo->is_alive) {
             printf("sending periodic update\n");
             serv_broadcast(servinfo, routing_table);
-            continue;
+            refresh_timeouts(servinfo, routing_table);
+            timeout.tv_sec = interval;
+            timeout.tv_usec = 0;
         }
 
         /* printf("waited %d seconds, got %d fds\n", interval, nready); */

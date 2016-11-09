@@ -36,28 +36,42 @@ servinfo_init(int id, int sockfd, time_t interval)
 }
 
 void
-refresh_timeouts(struct servinfo *servinfo, struct table *table, int servid)
+reset_timeout(struct table *table, int servid)
+{
+    assert(table);
+
+    struct serventry *s_entry = table_lookup_server_by_id(table, servid);
+    assert(s_entry);
+
+    s_entry->lastrecvd = 0;
+}
+
+void
+refresh_timeouts(struct servinfo *servinfo, struct table *table)
 {
     assert(servinfo);
-    assert(servinfo->timeouts);
-    assert(servid != servinfo->id);
 
+    int interval = (int) servinfo->interval;
     int neighbor_id, our_id = servinfo->id;
     struct serventry *s_entry = NULL;
     struct listitem *ptr = table->servers->head;
 
     while (ptr) {
         s_entry = ptr->value;
-        neighbor_id = s_entry->servid;
 
+        if (!s_entry->neighbor) {
+            ptr = ptr->next;
+            continue;
+        }
+
+        neighbor_id = s_entry->servid;
+        fprintf(stderr, "updating %d\n", neighbor_id);
         if (neighbor_id == our_id)
             ;                   /* skip our entry */
-        else if (neighbor_id == servid)
-            s_entry->timeouts = 0;
-        else if (s_entry->timeouts >= MAX_TIMEOUTS + 1)
+        else if (s_entry->lastrecvd >= 3 * interval)
             table_update_cost(table, our_id, neighbor_id, INF);
         else
-            s_entry->timeouts += 1;
+            s_entry->lastrecvd += interval;
 
         ptr = ptr->next;
     }
@@ -168,6 +182,6 @@ serv_update(struct servinfo *servinfo, struct table *table)
         recvd_dvptr = recvd_dvptr->next;
     }
 
-    refresh_timeouts(servinfo, table, senderid);
+    reset_timeout(table, senderid);
     return 0;
 }

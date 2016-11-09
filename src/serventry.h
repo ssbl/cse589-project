@@ -12,7 +12,7 @@ struct serventry {
     int neighbor;
     char *port;
     char *addr;
-    int timeouts;
+    int lastrecvd;
 };
 
 
