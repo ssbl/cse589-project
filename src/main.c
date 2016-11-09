@@ -83,7 +83,7 @@ main(int argc, char *argv[])
         nready = select(maxfd + 1, &rfds, NULL, NULL, &timeout);
         if (nready == -1 || errno == EINTR)
             continue;
-        if (nready == 0) {      /* read, broadcast here */
+        if (nready == 0 && servinfo->is_alive) { /* read, broadcast here */
             printf("sending periodic update\n");
             serv_broadcast(servinfo, routing_table);
             continue;
@@ -108,6 +108,9 @@ main(int argc, char *argv[])
         /* TODO: ask about differing bidirectional costs */
         /* TODO: verify update function */
         /* TODO: check if addresses and ports in topology file are valid */
+        /* TODO: create ERROR MESSAGE, SUCCESS function */
+        /* TODO: print id of sender server in serv_update */
+        /* TODO: create valid, non-bidirectional topology and test on that */
         if (FD_ISSET(STDIN_FILENO, &rfds)) {
             if (!fgets(inputline, MAXLEN_LINE, stdin) || ferror(stdin)) {
                 fprintf(stderr, "stopping\n");
@@ -180,6 +183,7 @@ main(int argc, char *argv[])
                         fprintf(stderr, "invalid servid: %s", tokens[1]);
                 } else if (!strcasecmp("crash", cmd_name)) {
                     /* no args */
+                    serv_crash(servinfo);
                 } else if (!strcasecmp("display", cmd_name)) {
                     /* no args */
                     printf("%s", table_str_for_id(routing_table));
