@@ -72,7 +72,7 @@ parse_neighbor_entry(char *line, FILE *fp, struct table *table)
         ptr = ptr->next;
     }
 
-    if (!dvec_add(table->costs, dvec_entry_new(neighbor, cost)))
+    if (!table_update_cost(table, neighbor, cost))
         return NULL;
 
     return table;
@@ -106,6 +106,32 @@ check_for_ip(struct list *servers)
     }
 
     return servid;
+}
+
+struct dvec *
+create_cost_list(struct list *servers, struct table *table)
+{
+    assert(servers);
+    assert(table);
+
+    struct dvec *costs = table->costs;
+    struct listitem *ptr = servers->head;
+
+    while (ptr) {
+        int *to = ptr->value;
+
+        if (*to == table->id) {
+            ptr = ptr->next;
+            continue;
+        }
+
+        if (!dvec_add(costs, dvec_entry_new(*to, INF)))
+            return NULL;
+
+        ptr = ptr->next;
+    }
+
+    return costs;
 }
 
 /*
@@ -165,6 +191,8 @@ parse_topofile(char *filename)
     table = table_init(servid, n, neighbors);
 
     table_set_list(table, servers);
+    if (!create_cost_list(servers, table))
+        goto fail;
     for (int i = 0; i < neighbors; i++)
         if (!parse_neighbor_entry(line, fp, table)) {
             fprintf(stderr, "cost entry not in the correct format\n");
