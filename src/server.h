@@ -12,6 +12,7 @@
 #define E_SYSCALL -1
 #define E_UNPACK -2
 #define E_LOOKUP -3
+#define E_BADMSG -4
 
 struct servinfo {
     int id;
@@ -26,5 +27,6 @@ struct servinfo *servinfo_init(int id, int sockfd, time_t interval);
 int serv_broadcast(struct servinfo *servinfo, struct table *table);
 int serv_crash(struct servinfo *servinfo);
 int serv_update(struct servinfo *servinfo, struct table *table);
+void refresh_timeouts(struct servinfo *servinfo, struct table *table);
 
 #endif

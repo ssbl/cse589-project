@@ -92,13 +92,12 @@ main(int argc, char *argv[])
             timeout.tv_usec = 0;
         }
 
-        /* printf("waited %d seconds, got %d fds\n", interval, nready); */
-
         if (FD_ISSET(sockfd, &rfds)) {
-            /* handle update reads here */
             ret = serv_update(servinfo, routing_table);
             if (ret == E_SYSCALL)
                 fprintf(stderr, "update error: system call\n");
+            else if (ret == E_BADMSG)
+                fprintf(stderr, "update: partial message received, ignoring...");
             else if (ret == E_UNPACK)
                 fprintf(stderr, "update error: bad message format\n");
             else if (ret == E_LOOKUP)
@@ -107,13 +106,7 @@ main(int argc, char *argv[])
                 packets += 1;
         }
 
-        /* TODO: clarify id namespace */
-        /* TODO: ask about differing bidirectional costs */
-        /* TODO: verify update function */
         /* TODO: check if addresses and ports in topology file are valid */
-        /* TODO: create ERROR MESSAGE, SUCCESS function */
-        /* TODO: print id of sender server in serv_update */
-        /* TODO: create valid, non-bidirectional topology and test on that */
         if (FD_ISSET(STDIN_FILENO, &rfds)) {
             if (!fgets(inputline, MAXLEN_LINE, stdin) || ferror(stdin)) {
                 fprintf(stderr, "stopping\n");
@@ -122,7 +115,7 @@ main(int argc, char *argv[])
                 cmdlen = strlen(inputline);
                 inputline[cmdlen - 1] = '\0';
 
-                tokens = tokenize(inputline, routing_table, servinfo);
+                tokens = tokenize(inputline);
                 if (tokens == NULL || !tokens[0])
                     continue;
 
@@ -136,12 +129,14 @@ main(int argc, char *argv[])
 
                     int from = validate_strtol(tokens[1]);
                     if (from < 1 || from > routing_table->n) {
+                        fprintf(stderr, "update: ");
                         fprintf(stderr, "invalid `src' value: %s\n", tokens[1]);
                         continue;
                     }
 
                     int to = validate_strtol(tokens[2]);
                     if (to < 1 || to > routing_table->n) {
+                        fprintf(stderr, "update: ");
                         fprintf(stderr, "invalid `dest' value: %s\n", tokens[2]);
                         continue;
                     } /* TODO: check if to == from */
@@ -150,12 +145,13 @@ main(int argc, char *argv[])
                     if (!strcasecmp("inf", tokens[3])) {
                         cost = INF;
                     } else if (cost <= 0) {
+                        fprintf(stderr, "update: ");
                         fprintf(stderr, "invalid `cost' value: %s\n", tokens[3]);
                         continue;
                     }
 
                     if (!table_update_cost(routing_table, to, from, cost))
-                        fprintf(stderr, "arguments out of range\n");
+                        fprintf(stderr, "update: arguments out of range\n");
                 } else if (!strcasecmp("step", cmd_name)) {
                     /* no args */
                     if (!serv_broadcast(servinfo, routing_table))
@@ -173,20 +169,24 @@ main(int argc, char *argv[])
 
                     int servid = validate_strtol(tokens[1]);
                     if (servid < 0 || servid > routing_table->n) {
-                        fprintf(stderr, "invalid `server-id' value\n");
+                        fprintf(stderr, "disable: invalid `server-id' value\n");
                         continue;
                     }
 
                     if (!table_is_neighbor(routing_table, servid)) {
+                        fprintf(stderr, "disable: ");
                         fprintf(stderr, "server %d not a neighbor\n", servid);
                         continue;
                     }
 
                     if (!table_update_cost(routing_table, self_id, servid, INF))
-                        fprintf(stderr, "invalid servid: %s", tokens[1]);
+                        fprintf(stderr, "disable: invalid servid: %s", tokens[1]);
                 } else if (!strcasecmp("crash", cmd_name)) {
                     /* no args */
-                    serv_crash(servinfo);
+                    if (!servinfo->is_alive)
+                        fprintf(stderr, "crash: already dead\n");
+                    else
+                        serv_crash(servinfo);
                 } else if (!strcasecmp("display", cmd_name)) {
                     /* no args */
                     printf("%s", table_str_for_id(routing_table));

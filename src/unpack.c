@@ -58,11 +58,10 @@ unpack_header(unsigned char *msgbuf, uint16_t *n, char *servport,
 }
 
 static unsigned char *
-unpack_entry(unsigned char *msgbuf, struct serventry *s_entry,
-             struct dvec *dv)
+unpack_entry(unsigned char *msgbuf, struct table *rcvrtable, struct dvec *dv)
 {
     assert(msgbuf);
-    assert(s_entry);
+    assert(rcvrtable);
     assert(dv);
 
     uint32_t addr;
@@ -70,11 +69,13 @@ unpack_entry(unsigned char *msgbuf, struct serventry *s_entry,
     char addrstr[ADDRLEN], portstr[PORTLEN];
     unsigned char *ptr = msgbuf;
     struct in_addr ia;
+    struct serventry *s_entry = NULL;
 
     ptr = unpack_uint32(ptr, &addr);
     ia.s_addr = addr;
     inet_ntop(AF_INET, &ia, addrstr, ADDRLEN);
-    if (addrstr == NULL || strcmp(s_entry->addr, addrstr)) {
+    if (addrstr == NULL
+        || !(s_entry = table_lookup_server_by_addr(rcvrtable, addrstr))) {
         fprintf(stderr, "\nunpack: malformed address from %d", s_entry->servid);
         return msgbuf;
     }
@@ -106,6 +107,8 @@ unpack_entries(unsigned char *msgbuf, struct table *rcvrtable,
                struct dvec *dv)
 {
     assert(msgbuf);
+    assert(rcvrtable);
+    assert(dv);
 
     unsigned char *msgptr = msgbuf;
     struct listitem *listptr = rcvrtable->servers->head;
@@ -113,11 +116,15 @@ unpack_entries(unsigned char *msgbuf, struct table *rcvrtable,
 
     while (listptr) {
         s_entry = listptr->value;
-        msgptr = unpack_entry(msgptr, s_entry, dv);
+        msgptr = unpack_entry(msgptr, rcvrtable, dv);
         listptr = listptr->next;
     }
 
-    assert(msgptr - msgbuf == 12 * rcvrtable->n);
+    if (msgptr - msgbuf != 12 * rcvrtable->n) {
+        dvec_free(dv);
+        dv = NULL;
+    }
+
     return msgptr;
 }
 
@@ -145,8 +152,10 @@ msg_unpack_dvec(unsigned char *msg, int servid, struct table *rcvrtable)
 
     msgptr = unpack_header(msgptr, &n, servport, servaddr);
     if (!(s_entry = table_lookup_server_by_addr(rcvrtable, servaddr))
-        || n != rcvrtable->n) {
-        fprintf(stderr, "\nrecv'd message from unknown server, ignoring...");
+        || n != rcvrtable->n
+        || s_entry->servid == servid) {
+        fprintf(stderr, "recv'd a message from an unknown or malicious" \
+                        "server, ignoring...\n");
         return NULL;
     }
 

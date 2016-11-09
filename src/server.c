@@ -144,24 +144,25 @@ serv_update(struct servinfo *servinfo, struct table *table)
     struct dvec_entry *recvd_dv_entry, *our_dv_entry;
     struct listitem *recvd_dvptr, *our_dvptr;
 
-    /* todo: use a specific address, so that we don't receive it from anyone */
     n = recvfrom(servinfo->sockfd, msg, msglen, 0, NULL, NULL);
     fprintf(stderr, "received %d bytes\n", (int) n);
     if (n == -1) {
         perror("recvfrom");
         return E_SYSCALL;
-    }
+    } else if (n != 8 + 12 * table->n)
+        return E_BADMSG;
 
     recvd_dv = msg_unpack_dvec(msg, servid, table);
-    dvec_print(recvd_dv);
     if (!recvd_dv || recvd_dv->from == servid)
         return E_UNPACK;
+    /* dvec_print(recvd_dv); */
 
     our_dv = table_get_dvec(table, servid);
     if (!our_dv)                /* we've made a big mistake */
         return E_LOOKUP;
 
     senderid = recvd_dv->from;
+    printf("RECEIVED A MESSAGE FROM SERVER %d\n", senderid);
     cost_to_sender = table_get_cost(table, servid, senderid);
     assert(cost_to_sender >= 0);
 

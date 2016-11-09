@@ -152,8 +152,6 @@ char **
 tokenize(char *inputline)
 {
     assert(inputline);
-    assert(table);
-    assert(servinfo);
 
     int tok;
     static char *tokens[4];     /* return value */
