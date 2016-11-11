@@ -83,7 +83,7 @@ check_for_ip(struct list *servers)
 {
     assert(servers);
 
-    int servid, count = 0;
+    int servid = -1, count = 0;
     char *localip;
     struct serventry *s_entry = NULL;
     struct listitem *ptr = servers->head;
@@ -203,6 +203,7 @@ parse_topofile(char *filename)
     return table;
 
 fail:
-    table_free(table);
+    if (table)
+        table_free(table);
     return NULL;
 }
