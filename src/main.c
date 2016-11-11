@@ -148,7 +148,8 @@ main(int argc, char *argv[])
                         continue;
                     }
 
-                    if (serv_send_update(servinfo, routing_table, to, cost) < 0) {
+                    ret = serv_send_update(servinfo, routing_table, to, cost);
+                    if (ret < 0) {
                         fprintf(stderr, "update: error while sending update, ");
                         fprintf(stderr, "aborting update operation\n");
                         continue;

@@ -95,8 +95,8 @@ msg_pack_update(unsigned char *msgbuf, int id, int cost)
 
     unsigned char *ptr = msgbuf;
 
-    ptr = pack_uint16(ptr, id);
-    ptr = pack_uint16(ptr, cost);
+    ptr = pack_uint16(ptr, (uint16_t) id);
+    ptr = pack_uint16(ptr, (uint16_t) cost);
     ptr = pack_uint32(ptr, 0);  /* pad */
 
     if (ptr - msgbuf != 8)

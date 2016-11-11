@@ -133,15 +133,19 @@ msg_unpack_update(unsigned char *msgbuf, int *from, int *cost)
 {
     assert(msgbuf);
 
-    int zeros;
+    uint32_t zeros;
+    uint16_t from_u16, cost_u16;
     unsigned char *ptr = msgbuf;
 
-    ptr = unpack_uint16(ptr, from);
-    ptr = unpack_uint16(ptr, cost);
+    ptr = unpack_uint16(ptr, &from_u16);
+    ptr = unpack_uint16(ptr, &cost_u16);
     ptr = unpack_uint32(ptr, &zeros);
 
     if (ptr - msgbuf != 8)
         return NULL;
+
+    *from = from_u16;
+    *cost = cost_u16;
 
     return ptr;
 }

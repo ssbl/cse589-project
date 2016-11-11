@@ -90,6 +90,7 @@ update_from_id(struct servinfo *servinfo, struct table *table,
     if (!msg_unpack_update(msg, &from, &cost))
         return E_UNPACK;
 
+    printf("cost %d from %d\n", cost, from);
     if (!table_update_cost(table, from, cost) || from == servinfo->id)
         return E_LOOKUP;
 
@@ -105,24 +106,26 @@ serv_send_update(struct servinfo *servinfo, struct table *table,
     assert(table);
 
     int ret;
-    socklen_t msglen;
+    socklen_t addrlen;
     unsigned char msg[8];
     struct sockaddr *servaddr = NULL;
     struct serventry *s_entry = NULL;
 
-    if (!msg_pack_update(msg, neighbor_id, cost))
+    if (!msg_pack_update(msg, servinfo->id, cost))
         return E_PACK;
+    msg[9] = 0;
 
     s_entry = table_lookup_server_by_id(table, neighbor_id);
     if (!s_entry)
         return E_LOOKUP;
 
     servaddr = addr_from_ip(s_entry->addr, s_entry->port);
+    printf("sending update to %d\n", neighbor_id);
     if (!servaddr)
         return E_BADADDR;
 
-    msglen = sizeof(*servaddr);
-    ret = sendto(servinfo->sockfd, msg, msglen, 0, servaddr, msglen);
+    addrlen = sizeof(*servaddr);
+    ret = sendto(servinfo->sockfd, msg, 8, 0, servaddr, addrlen);
     if (ret == -1) {
         perror("sendto");
         return E_SYSCALL;
