@@ -78,6 +78,60 @@ refresh_timeouts(struct servinfo *servinfo, struct table *table)
 }
 
 int
+update_from_id(struct servinfo *servinfo, struct table *table,
+               unsigned char *msg)
+{
+    assert(servinfo);
+    assert(table);
+    assert(msg);
+
+    int from, cost;
+
+    if (!msg_unpack_update(msg, &from, &cost))
+        return E_UNPACK;
+
+    if (!table_update_cost(table, from, cost) || from == servinfo->id)
+        return E_LOOKUP;
+
+    printf("got an update from %d\n", from);
+    return 0;
+}
+
+int
+serv_send_update(struct servinfo *servinfo, struct table *table,
+            int neighbor_id, int cost)
+{
+    assert(servinfo);
+    assert(table);
+
+    int ret;
+    socklen_t msglen;
+    unsigned char msg[8];
+    struct sockaddr *servaddr = NULL;
+    struct serventry *s_entry = NULL;
+
+    if (!msg_pack_update(msg, neighbor_id, cost))
+        return E_PACK;
+
+    s_entry = table_lookup_server_by_id(table, neighbor_id);
+    if (!s_entry)
+        return E_LOOKUP;
+
+    servaddr = addr_from_ip(s_entry->addr, s_entry->port);
+    if (!servaddr)
+        return E_BADADDR;
+
+    msglen = sizeof(*servaddr);
+    ret = sendto(servinfo->sockfd, msg, msglen, 0, servaddr, msglen);
+    if (ret == -1) {
+        perror("sendto");
+        return E_SYSCALL;
+    }
+
+    return 0;
+}
+
+int
 serv_broadcast(struct servinfo *servinfo, struct table *table)
 {
     assert(servinfo);
@@ -93,6 +147,9 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
     struct serventry *s_entry = NULL;
 
     msg = msg_pack_dvec(servid, table);
+    if (!msg)
+        return E_PACK;
+
     msglen = 8 + table->n * 12;
     msg[msglen] = 0;
 
@@ -106,7 +163,8 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
 
         servaddr = addr_from_ip(s_entry->addr, s_entry->port);
         if (!servaddr)
-            continue;
+            return E_BADADDR;
+
         addrlen = sizeof(*servaddr);
 
         fprintf(stderr, "sending to server %d\n", s_entry->servid);
@@ -149,16 +207,17 @@ serv_update(struct servinfo *servinfo, struct table *table)
     if (n == -1) {
         perror("recvfrom");
         return E_SYSCALL;
+    } else if (n == 8) {
+        return update_from_id(servinfo, table, msg);
     } else if (n != 8 + 12 * table->n)
         return E_BADMSG;
 
     recvd_dv = msg_unpack_dvec(msg, servid, table);
     if (!recvd_dv || recvd_dv->from == servid)
         return E_UNPACK;
-    /* dvec_print(recvd_dv); */
 
     our_dv = table->costs;
-    if (!our_dv)                /* we've made a big mistake */
+    if (!our_dv || !table_lookup_server_by_id(table, recvd_dv->from))
         return E_LOOKUP;
 
     senderid = recvd_dv->from;
@@ -185,4 +244,21 @@ serv_update(struct servinfo *servinfo, struct table *table)
 
     reset_timeout(table, senderid);
     return 0;
+}
+
+void
+serv_perror(int errcode)
+{
+    if (errcode == E_SYSCALL)
+        fprintf(stderr, "update error: system call\n");
+    else if (errcode == E_BADMSG)
+        fprintf(stderr, "update: partial message received, ignoring...");
+    else if (errcode == E_UNPACK)
+        fprintf(stderr, "update error: bad message format\n");
+    else if (errcode == E_LOOKUP)
+        fprintf(stderr, "update error: lookup failed\n");
+    else if (errcode == E_BADADDR)
+        fprintf(stderr, "update error: bad address\n");
+    else if (errcode == E_PACK)
+        fprintf(stderr, "update error: couldn't serialize message\n");
 }

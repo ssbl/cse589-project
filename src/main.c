@@ -86,7 +86,9 @@ main(int argc, char *argv[])
 
         if (timeout.tv_sec == 0 && servinfo->is_alive) {
             printf("sending periodic update\n");
-            serv_broadcast(servinfo, routing_table);
+            ret = serv_broadcast(servinfo, routing_table);
+            if (ret < 0)
+                serv_perror(ret);
             refresh_timeouts(servinfo, routing_table);
             timeout.tv_sec = interval;
             timeout.tv_usec = 0;
@@ -94,19 +96,12 @@ main(int argc, char *argv[])
 
         if (FD_ISSET(sockfd, &rfds)) {
             ret = serv_update(servinfo, routing_table);
-            if (ret == E_SYSCALL)
-                fprintf(stderr, "update error: system call\n");
-            else if (ret == E_BADMSG)
-                fprintf(stderr, "update: partial message received, ignoring...");
-            else if (ret == E_UNPACK)
-                fprintf(stderr, "update error: bad message format\n");
-            else if (ret == E_LOOKUP)
-                fprintf(stderr, "update error: lookup failed\n");
+            if (ret < 0)
+                serv_perror(ret);
             else
                 packets += 1;
         }
 
-        /* TODO: check if addresses and ports in topology file are valid */
         if (FD_ISSET(STDIN_FILENO, &rfds)) {
             if (!fgets(inputline, MAXLEN_LINE, stdin) || ferror(stdin)) {
                 fprintf(stderr, "stopping\n");
@@ -128,25 +123,34 @@ main(int argc, char *argv[])
                     }
 
                     int from = validate_strtol(tokens[1]);
-                    if (from < 1 || from > routing_table->n) {
+                    if (from != servinfo->id) {
                         fprintf(stderr, "update: ");
                         fprintf(stderr, "invalid `src' value: %s\n", tokens[1]);
                         continue;
                     }
 
                     int to = validate_strtol(tokens[2]);
-                    if (to < 1 || to > routing_table->n) {
+                    if (to == from) {
+                        fprintf(stderr, "warning: updating cost to self, "
+                                        "should be 0\n");
+                    } else if (to < 1) {
                         fprintf(stderr, "update: ");
                         fprintf(stderr, "invalid `dest' value: %s\n", tokens[2]);
                         continue;
-                    } /* TODO: check if to == from */
+                    }
 
                     int cost = validate_strtol(tokens[3]);
                     if (!strcasecmp("inf", tokens[3])) {
                         cost = INF;
-                    } else if (cost <= 0) {
+                    } else if (cost < 0) {
                         fprintf(stderr, "update: ");
                         fprintf(stderr, "invalid `cost' value: %s\n", tokens[3]);
+                        continue;
+                    }
+
+                    if (serv_send_update(servinfo, routing_table, to, cost) < 0) {
+                        fprintf(stderr, "update: error while sending update, ");
+                        fprintf(stderr, "aborting update operation\n");
                         continue;
                     }
 

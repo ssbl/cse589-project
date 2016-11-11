@@ -128,6 +128,24 @@ unpack_entries(unsigned char *msgbuf, struct table *rcvrtable,
     return msgptr;
 }
 
+unsigned char *
+msg_unpack_update(unsigned char *msgbuf, int *from, int *cost)
+{
+    assert(msgbuf);
+
+    int zeros;
+    unsigned char *ptr = msgbuf;
+
+    ptr = unpack_uint16(ptr, from);
+    ptr = unpack_uint16(ptr, cost);
+    ptr = unpack_uint32(ptr, &zeros);
+
+    if (ptr - msgbuf != 8)
+        return NULL;
+
+    return ptr;
+}
+
 /*
  * Deserialize a message into a distance vector structure.
  *

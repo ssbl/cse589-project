@@ -87,6 +87,24 @@ pack_entries(unsigned char *msgbuf, int servid, struct table *table)
     return msgptr;
 }
 
+unsigned char *
+msg_pack_update(unsigned char *msgbuf, int id, int cost)
+{
+    assert(msgbuf);
+    assert(cost >= 0);
+
+    unsigned char *ptr = msgbuf;
+
+    ptr = pack_uint16(ptr, id);
+    ptr = pack_uint16(ptr, cost);
+    ptr = pack_uint32(ptr, 0);  /* pad */
+
+    if (ptr - msgbuf != 8)
+        return NULL;
+
+    return ptr;
+}
+
 /*
  * Create a message bytestring in the general message format.
  * Return a pointer to the message string if nothing fails.
@@ -109,7 +127,7 @@ msg_pack_dvec(int servid, struct table *table)
     if (!s_entry)
         return NULL;
 
-    static unsigned char msg[MAXLEN_MSG]; /* return value */
+    static unsigned char bcast_msg[MAXLEN_MSG]; /* return value */
 
     n_entries = table->n;
     servport = atoi(s_entry->port);
@@ -119,13 +137,13 @@ msg_pack_dvec(int servid, struct table *table)
     }
 
     servaddr = addr.s_addr;
-    ptr1 = pack_header(msg, n_entries, servport, servaddr);
-    if (ptr1 - msg != 8)
+    ptr1 = pack_header(bcast_msg, n_entries, servport, servaddr);
+    if (ptr1 - bcast_msg != 8)
         return NULL;
 
     ptr2 = pack_entries(ptr1, servid, table);
     if (ptr2 - ptr1 != 12 * table->n)
         return NULL;
 
-    return msg;
+    return bcast_msg;
 }
