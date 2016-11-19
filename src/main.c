@@ -84,11 +84,14 @@ main(int argc, char *argv[])
         if (nready == -1 || errno == EINTR)
             continue;
 
-        if (timeout.tv_sec == 0 && servinfo->is_alive) {
-            printf("sending periodic update\n");
-            ret = serv_broadcast(servinfo, routing_table);
-            if (ret < 0)
-                serv_perror(ret);
+        if (timeout.tv_sec == 0) {
+            if (servinfo->is_alive) {
+                printf("sending periodic update\n");
+                ret = serv_broadcast(servinfo, routing_table);
+                if (ret < 0)
+                    serv_perror(ret);
+            }
+
             refresh_timeouts(servinfo, routing_table);
             timeout.tv_sec = interval;
             timeout.tv_usec = 0;
@@ -117,7 +120,7 @@ main(int argc, char *argv[])
                 cmd_name = tokens[0];
                 if (!strcasecmp("update", cmd_name)) {
                     /* update src dest cost */
-                    if (!tokens[1] || !tokens[2] || !tokens[3]) {
+                    if (!tokens[1] || !tokens[2] || !tokens[3] || tokens[4]) {
                         fprintf(stderr, "usage: update <src> <dest> <cost>\n");
                         continue;
                     }
@@ -157,23 +160,28 @@ main(int argc, char *argv[])
 
                     if (!table_update_cost(routing_table, to, cost))
                         fprintf(stderr, "update: arguments out of range\n");
+                    else
+                        printf("%s SUCCESS", inputline);
                 } else if (!strcasecmp("step", cmd_name)) {
                     /* no args */
-                    if (!serv_broadcast(servinfo, routing_table))
+                    if (!serv_broadcast(servinfo, routing_table)) {
                         printf("sent a packet to neighbors\n");
+                        printf("%s SUCCESS\n", inputline);
+                    }
                 } else if (!strcasecmp("packets", cmd_name)) {
                     /* no args */
                     printf("packets received: %d\n", packets);
                     packets = 0;
+                    printf("%s SUCCESS\n", inputline);
                 } else if (!strcasecmp("disable", cmd_name)) {
                     /* disable servid */
-                    if (!tokens[1]) {
+                    if (!tokens[1] || tokens[2]) {
                         fprintf(stderr, "usage: disable <server-id>\n");
                         continue;
                     }
 
                     int servid = validate_strtol(tokens[1]);
-                    if (servid < 0 || servid > routing_table->n) {
+                    if (servid < 0 || servid == servinfo->id) {
                         fprintf(stderr, "disable: invalid `server-id' value\n");
                         continue;
                     }
@@ -184,17 +192,23 @@ main(int argc, char *argv[])
                         continue;
                     }
 
-                    if (!table_update_cost(routing_table, servid, INF))
-                        fprintf(stderr, "disable: invalid servid: %s", tokens[1]);
+                    ret = serv_disable_neighbor(routing_table, servid);
+                    if (ret < 0)
+                        serv_perror(ret);
+                    else
+                        printf("%s SUCCESS\n", inputline);
                 } else if (!strcasecmp("crash", cmd_name)) {
                     /* no args */
                     if (!servinfo->is_alive)
                         fprintf(stderr, "crash: already dead\n");
-                    else
+                    else {
                         serv_crash(servinfo);
+                        printf("%s SUCCESS\n", inputline);
+                    }
                 } else if (!strcasecmp("display", cmd_name)) {
                     /* no args */
                     printf("%s", table_str_for_id(routing_table));
+                    printf("%s SUCCESS\n", inputline);
                 } else
                     continue;
             }

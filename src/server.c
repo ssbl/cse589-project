@@ -65,7 +65,6 @@ refresh_timeouts(struct servinfo *servinfo, struct table *table)
         }
 
         neighbor_id = s_entry->servid;
-        fprintf(stderr, "updating %d\n", neighbor_id);
         if (neighbor_id == our_id)
             ;                   /* skip our entry */
         else if (s_entry->lastrecvd >= 3 * interval)
@@ -113,7 +112,7 @@ serv_send_update(struct servinfo *servinfo, struct table *table,
 
     if (!msg_pack_update(msg, servinfo->id, cost))
         return E_PACK;
-    msg[9] = 0;
+    msg[8] = 0;
 
     s_entry = table_lookup_server_by_id(table, neighbor_id);
     if (!s_entry)
@@ -130,6 +129,23 @@ serv_send_update(struct servinfo *servinfo, struct table *table,
         perror("sendto");
         return E_SYSCALL;
     }
+
+    return 0;
+}
+
+int
+serv_disable_neighbor(struct table *table, int neighbor_id)
+{
+    assert(table);
+
+    struct serventry *s_entry = NULL;
+
+    if (!(s_entry = table_lookup_server_by_id(table, neighbor_id)))
+        return E_LOOKUP;
+    if (!table_update_cost(table, neighbor_id, INF))
+        return E_LOOKUP;
+
+    s_entry->neighbor = 0;
 
     return 0;
 }
@@ -224,6 +240,12 @@ serv_update(struct servinfo *servinfo, struct table *table)
         return E_LOOKUP;
 
     senderid = recvd_dv->from;
+    if (!table_is_neighbor(table, senderid)) {
+        fprintf(stderr, "recv'd message from non-neighbor, ignoring...\n");
+        dvec_free(recvd_dv);
+        return 0;
+    }
+
     printf("RECEIVED A MESSAGE FROM SERVER %d\n", senderid);
     cost_to_sender = table_get_cost(table, senderid);
     assert(cost_to_sender >= 0);
@@ -238,7 +260,7 @@ serv_update(struct servinfo *servinfo, struct table *table)
         cost = cost_to_sender + recvd_dv_entry->cost;
         if (our_dv_entry->cost > cost) {
             our_dv_entry->cost = cost;
-            our_dv_entry->via = senderid;
+            our_dv_entry->via = table_get_nexthop(table, senderid);
         }
 
         our_dvptr = our_dvptr->next;
@@ -246,6 +268,7 @@ serv_update(struct servinfo *servinfo, struct table *table)
     }
 
     reset_timeout(table, senderid);
+    dvec_free(recvd_dv);
     return 0;
 }
 

@@ -29,6 +29,7 @@ struct servinfo *servinfo_init(int id, int sockfd, time_t interval);
 int serv_broadcast(struct servinfo *servinfo, struct table *table);
 int serv_crash(struct servinfo *servinfo);
 int serv_update(struct servinfo *servinfo, struct table *table);
+int serv_disable_neighbor(struct table *table, int neighbor_id);
 int serv_send_update(struct servinfo *si, struct table *table, int to, int cost);
 void serv_perror(int errcode);
 void refresh_timeouts(struct servinfo *servinfo, struct table *table);
