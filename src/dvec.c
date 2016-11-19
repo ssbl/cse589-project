@@ -20,6 +20,7 @@ dvec_entry_new(int to, int cost)
     dv_entry->to = to;
     dv_entry->via = to;
     dv_entry->cost = cost;
+    dv_entry->direct_cost = cost;
 
     return dv_entry;
 }
@@ -75,7 +76,7 @@ dvec_add(struct dvec *dvec, struct dvec_entry *dv_entry)
 }
 
 struct dvec *
-dvec_update_cost(struct dvec *dvec, int to, int cost)
+dvec_update_cost(struct dvec *dvec, int to, int cost, int flags)
 {
     assert(dvec);
     assert(dvec->list);
@@ -92,7 +93,10 @@ dvec_update_cost(struct dvec *dvec, int to, int cost)
         assert(ptr->value);
         dv_entry = ptr->value;
         if (dv_entry->to == to) {
-            dv_entry->cost = cost;
+            if (flags == DIRECT)
+                dv_entry->direct_cost = cost;
+            else
+                dv_entry->cost = cost;
             return dvec;
         }
         ptr = ptr->next;
@@ -102,7 +106,7 @@ dvec_update_cost(struct dvec *dvec, int to, int cost)
 }
 
 int
-dvec_lookup(struct dvec *dvec, int to)
+dvec_lookup(struct dvec *dvec, int to, int flags)
 {
     assert(dvec);
     assert(dvec->list);
@@ -115,7 +119,29 @@ dvec_lookup(struct dvec *dvec, int to)
         dv_entry = ptr->value;
 
         if (dv_entry->to == to)
-            return dv_entry->cost;
+            return (flags == DIRECT ? dv_entry->direct_cost : dv_entry->cost);
+
+        ptr = ptr->next;
+    }
+
+    return E_LOOKUP_FAILED;
+}
+
+int
+dvec_lookup_via(struct dvec *dvec, int to)
+{
+    assert(dvec);
+    assert(dvec->list);
+
+    struct dvec_entry *dv_entry;
+    struct listitem *ptr = dvec->list->head;
+
+    while (ptr) {
+        assert(ptr->value);
+        dv_entry = ptr->value;
+
+        if (dv_entry->to == to)
+            return dv_entry->via;
 
         ptr = ptr->next;
     }

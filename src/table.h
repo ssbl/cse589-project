@@ -21,6 +21,7 @@ struct table {
 struct table *table_init(int servid, int n, int neighbors);
 struct table *table_set_list(struct table *table, struct list* servers);
 int table_get_cost(struct table *table, int to);
+int table_get_nexthop(struct table *table, int to);
 struct serventry *table_lookup_server_by_id(struct table *table, int servid);
 struct serventry *table_lookup_server_by_addr(struct table *table, char *addr);
 struct table *table_update_cost(struct table *table, int to, int cost);

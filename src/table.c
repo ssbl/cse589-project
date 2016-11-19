@@ -51,7 +51,16 @@ table_get_cost(struct table *table, int to)
     assert(table);
     assert(table->costs);
 
-    return dvec_lookup(table->costs, to);
+    return dvec_lookup(table->costs, to, 0);
+}
+
+int
+table_get_direct_cost(struct table *table, int to)
+{
+    assert(table);
+    assert(table->costs);
+
+    return dvec_lookup(table->costs, to, DIRECT);
 }
 
 struct serventry *
@@ -63,10 +72,19 @@ table_lookup_server_by_id(struct table *table, int servid)
     struct serventry *ret;
     struct listitem *serv = table->servers->head;
 
-    while (((ret = serv->value) != NULL) && ret->servid != servid)
+    while (serv && ((ret = serv->value) != NULL) && ret->servid != servid)
         serv = serv->next;
 
-    return ret;
+    return serv ? ret : NULL;
+}
+
+int
+table_get_nexthop(struct table *table, int to)
+{
+    assert(table);
+    assert(table->costs);
+
+    return dvec_lookup_via(table->costs, to);
 }
 
 struct serventry *
@@ -79,10 +97,10 @@ table_lookup_server_by_addr(struct table *table, char *addr)
     struct listitem *serv = table->servers->head;
     struct serventry *ret;
 
-    while (((ret = serv->value) != NULL) && strcmp(ret->addr, addr) != 0)
+    while (serv && ((ret = serv->value) != NULL) && strcmp(ret->addr, addr) != 0)
         serv = serv->next;
 
-    return ret;
+    return serv ? ret : NULL;
 }
 
 struct table *
@@ -92,7 +110,20 @@ table_update_cost(struct table *table, int to, int cost)
 
     struct dvec *dv = table->costs;
 
-    if (dvec_update_cost(dv, to, cost) == NULL)
+    if (!dvec_update_cost(dv, to, cost, 0))
+        return NULL;
+
+    return table;
+}
+
+struct table *
+table_update_topology(struct table *table, int to, int cost)
+{
+    assert(table);
+
+    struct dvec *dv = table->costs;
+
+    if (!dvec_update_cost(dv, to, cost, DIRECT))
         return NULL;
 
     return table;
