@@ -1,0 +1,2 @@
+To compile the main source files, run make from this directory, or `make server`
+from the src directory.
