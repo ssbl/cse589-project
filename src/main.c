@@ -120,7 +120,7 @@ main(int argc, char *argv[])
                 cmd_name = tokens[0];
                 if (!strcasecmp("update", cmd_name)) {
                     /* update src dest cost */
-                    if (!tokens[1] || !tokens[2] || !tokens[3] || tokens[4]) {
+                    if (!tokens[1] || !tokens[2] || !tokens[3]) {
                         fprintf(stderr, "usage: update <src> <dest> <cost>\n");
                         continue;
                     }

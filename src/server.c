@@ -90,7 +90,7 @@ update_from_id(struct servinfo *servinfo, struct table *table,
         return E_UNPACK;
 
     printf("cost %d from %d\n", cost, from);
-    if (!table_update_cost(table, from, cost) || from == servinfo->id)
+    if (from == servinfo->id || !table_update_cost(table, from, cost))
         return E_LOOKUP;
 
     printf("got an update from %d\n", from);
