@@ -186,7 +186,6 @@ serv_broadcast(struct servinfo *servinfo, struct table *table)
 
         addrlen = sizeof(*servaddr);
 
-        fprintf(stderr, "sending to server %d\n", s_entry->servid);
         ret = sendto(servinfo->sockfd, msg, msglen, 0, servaddr, addrlen);
         if (ret == -1)
             fprintf(stderr, "sendto failed for server %d", s_entry->servid);
@@ -222,7 +221,6 @@ serv_update(struct servinfo *servinfo, struct table *table)
     struct listitem *recvd_dvptr, *our_dvptr;
 
     n = recvfrom(servinfo->sockfd, msg, msglen, 0, NULL, NULL);
-    fprintf(stderr, "received %d bytes\n", (int) n);
     if (n == -1) {
         perror("recvfrom");
         return E_SYSCALL;

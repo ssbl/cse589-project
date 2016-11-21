@@ -5,5 +5,6 @@
 #define MAIN_H_
 
 #define USAGE_STR "usage: ./server -t <topology-file> -i <interval>\n"
+#define NDEBUG
 
 #endif
